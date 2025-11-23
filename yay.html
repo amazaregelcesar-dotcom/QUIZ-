@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Interactive Cytogenetics Quiz — Lectures 1–15</title>
+  <style>
+    body { font-family: system-ui, Segoe UI, Roboto, Arial; margin: 18px; background: #f7fafc; }
+    .container { max-width: 980px; margin: 0 auto; background: white; padding: 18px; border-radius: 10px; box-shadow: 0 6px 24px rgba(2,6,23,0.08); }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .question { border: 1px solid #e6eef6; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+    .choices button { display: block; width: 100%; text-align: left; padding: 8px; margin: 6px 0; border-radius: 6px; border: 1px solid #dfe9f5; background: #fff; }
+    .choices button.correct { border-color: #2f9e44; background: rgba(47,158,68,0.08); }
+    .choices button.wrong { border-color: #e03131; background: rgba(224,49,49,0.06); }
+    .explain { font-size: 13px; padding: 8px; margin-top: 6px; background: #fbfbff; border-left: 4px solid #cfe3ff; border-radius: 6px; }
+    .lecture-badge { background: #eef2ff; padding: 4px 8px; border-radius: 999px; font-weight: 600; }
+    footer { margin-top: 12px; text-align: right; }
+    .small { font-size: 13px; color: #6b7280; }
+    .summary { padding: 10px; border-radius: 8px; background: #f1f5f9; margin-top: 8px; }
+    .btn { padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; }
+    .btn.primary { background: #2563eb; color: white; }
+    .btn.ghost { background: transparent; border: 1px solid #dbeafe; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Interactive Cytogenetics Quiz — Lectures 1–15</h1>
+    <div class="small">Assumptions: Lectures 1–12 → 15 questions each; Lectures 13–15 → 20 questions each.</div>
+
+    <div class="controls">
+      <select id="lectureSelect"></select>
+      <button class="btn primary" id="startBtn">Start / Show Questions</button>
+      <button class="btn" id="scoreBtn">Score</button>
+      <button class="btn ghost" id="resetBtn">Reset</button>
+      <button class="btn" id="exportBtn">Export answers (JSON)</button>
+    </div>
+
+    <div id="quizArea"></div>
+    <div class="summary" id="summary" style="display:none"></div>
+  </div>
+
+<script>
+const config = {
+  lectureCounts: { 1: 15, 2: 15, 3: 15, 4: 15, 5: 15, 6: 15, 7: 15, 8: 15, 9: 15, 10: 15, 11: 15, 12: 15, 13: 20, 14: 20, 15: 20 },
+  questions: {
+  "1": [
+    {"id": "1-1", "q": "What is the branch of biology that deals with the structure and function of chromosomes?", "choices": ["Cytogenetics", "Genomics", "Molecular Biology", "Genetics"], "ans": 0, "explain": "Cytogenetics is the study of chromosomes and their role in inheritance."},
+    {"id": "1-2", "q": "Who proposed the Germplasm Theory?", "choices": ["Gregor Mendel", "Charles Darwin", "August Weismann", "Louis Pasteur"], "ans": 2, "explain": "Weismann proposed that hereditary information is passed only through germ cells and not somatic cells."},
+    {"id": "1-3", "q": "Who is considered the 'Father of Modern Genetics'?", "choices": ["Gregor Mendel", "Louis Pasteur", "Charles Darwin", "Robert Hooke"], "ans": 0, "explain": "Gregor Mendel is known as the Father of Modern Genetics for his work on heredity using pea plants."},
+    {"id": "1-4", "q": "What does Mendel’s Law of Independent Assortment state?", "choices": ["Genes for different traits segregate independently during gamete formation", "Gene pairs segregate equally during cell division", "One gene can express more than one trait", "Genes are inherited as a group"], "ans": 0, "explain": "Mendel’s Law of Independent Assortment states that genes for different traits segregate independently during gamete formation."},
+    {"id": "1-5", "q": "What is the process of cell division in somatic cells called?", "choices": ["Mitosis", "Meiosis", "Budding", "Fragmentation"], "ans": 0, "explain": "Mitosis is the process of cell division in somatic cells, resulting in two genetically identical daughter cells."},
+    {"id": "1-6", "q": "What is the central dogma of molecular biology?", "choices": ["DNA → RNA → Protein", "Protein → DNA → RNA", "RNA → DNA → Protein", "DNA → Protein → RNA"], "ans": 0, "explain": "The central dogma describes the flow of genetic information: DNA is transcribed into RNA, which is then translated into protein."},
+    {"id": "1-7", "q": "What does the term 'genotype' refer to?", "choices": ["Physical appearance", "Genetic makeup", "Environmental influence", "Cellular function"], "ans": 1, "explain": "Genotype refers to the genetic makeup of an organism, particularly the alleles it possesses."},
+    {"id": "1-8", "q": "Which type of trait is controlled by a single gene?", "choices": ["Monogenic trait", "Polygenic trait", "Linked trait", "Environmental trait"], "ans": 0, "explain": "Monogenic traits are controlled by a single gene, while polygenic traits are controlled by multiple genes."},
+    {"id": "1-9", "q": "What is the primary function of the mitochondria?", "choices": ["Energy production", "Protein synthesis", "Cell division", "DNA replication"], "ans": 0, "explain": "The mitochondria are the powerhouses of the cell, generating ATP through cellular respiration."},
+    {"id": "1-10", "q": "What is the significance of the 'crossing-over' event in meiosis?", "choices": ["Increases genetic diversity", "Decreases chromosome number", "Ensures equal DNA distribution", "Produces identical cells"], "ans": 0, "explain": "Crossing-over during meiosis increases genetic diversity by exchanging genetic material between homologous chromosomes."},
+    {"id": "1-11", "q": "What is the structure of DNA according to Watson and Crick?", "choices": ["Double helix", "Single strand", "Triple helix", "Double strand"], "ans": 0, "explain": "Watson and Crick proposed the double helix model of DNA, which consists of two intertwined strands."},
+    {"id": "1-12", "q": "Which of the following is a purine base?", "choices": ["Adenine", "Thymine", "Cytosine", "Uracil"], "ans": 0, "explain": "Adenine is a purine base, while thymine, cytosine, and uracil are pyrimidine bases."},
+    {"id": "1-13", "q": "What does the term 'phenotype' refer to?", "choices": ["Genetic makeup", "Physical appearance", "Gene expression", "Environmental interaction"], "ans": 1, "explain": "Phenotype refers to the observable physical characteristics of an organism resulting from its genotype and environmental factors."},
+    {"id": "1-14", "q": "What are homologous chromosomes?", "choices": ["Chromosomes that are identical", "Chromosomes that pair during meiosis", "Chromosomes that contain different genetic information", "Chromosomes found in sex cells"], "ans": 1, "explain": "Homologous chromosomes are chromosome pairs, one from each parent, that are similar in size, shape, and genetic content."},
+    {"id": "1-15", "q": "What is the function of ribosomes in cells?", "choices": ["Protein synthesis", "DNA replication", "Cell division", "Energy production"], "ans": 0, "explain": "Ribosomes are the sites of protein synthesis, where mRNA is translated into amino acid sequences."}    ],
+    2: [
+        {"id": "2-1", "q": "What is the basic structure of DNA?", "choices": ["Double helix", "Triple helix", "Single strand", "Circular shape"], "ans": 0, "explain": "DNA is structured as a double helix, with two strands wound around each other."},
+    {"id": "2-2", "q": "Which nitrogenous base pairs with adenine in DNA?", "choices": ["Thymine", "Cytosine", "Guanine", "Uracil"], "ans": 0, "explain": "Adenine pairs with thymine in DNA through two hydrogen bonds."},
+    {"id": "2-3", "q": "Which molecule is responsible for carrying genetic information in a cell?", "choices": ["DNA", "RNA", "Protein", "Carbohydrates"], "ans": 0, "explain": "DNA carries the genetic instructions for the development, functioning, and reproduction of all living organisms."},
+    {"id": "2-4", "q": "What enzyme is involved in the process of DNA replication?", "choices": ["DNA polymerase", "RNA polymerase", "Helicase", "Ligase"], "ans": 0, "explain": "DNA polymerase is the enzyme that adds nucleotides to the growing DNA strand during replication."},
+    {"id": "2-5", "q": "What is the difference between DNA and RNA?", "choices": ["RNA contains uracil, while DNA contains thymine", "RNA is double-stranded, while DNA is single-stranded", "DNA is found in the nucleus, while RNA is found in the cytoplasm", "RNA has a deoxyribose sugar, while DNA has ribose sugar"], "ans": 0, "explain": "RNA contains uracil in place of thymine, and RNA is usually single-stranded, while DNA is double-stranded."},
+    {"id": "2-6", "q": "Which type of RNA carries genetic information from the nucleus to the ribosomes?", "choices": ["mRNA", "tRNA", "rRNA", "snRNA"], "ans": 0, "explain": "mRNA carries the genetic information transcribed from DNA to the ribosomes for protein synthesis."},
+    {"id": "2-7", "q": "What is the function of tRNA in protein synthesis?", "choices": ["Translates mRNA", "Carries amino acids to ribosomes", "Forms ribosomes", "Synthesizes proteins"], "ans": 1, "explain": "tRNA transports amino acids to the ribosome, where they are added to the growing protein chain."},
+    {"id": "2-8", "q": "What is the main function of rRNA?", "choices": ["To carry genetic information", "To synthesize proteins", "To form ribosomes", "To transport amino acids"], "ans": 2, "explain": "rRNA forms part of the ribosome structure and is essential for protein synthesis."},
+    {"id": "2-9", "q": "Which process involves the copying of DNA into RNA?", "choices": ["Transcription", "Translation", "Replication", "Mitosis"], "ans": 0, "explain": "Transcription is the process of copying DNA into RNA."},
+    {"id": "2-10", "q": "What does the process of translation produce?", "choices": ["RNA", "Proteins", "DNA", "Enzymes"], "ans": 1, "explain": "Translation produces proteins by decoding the mRNA sequence into a chain of amino acids."},
+    {"id": "2-11", "q": "What is a codon?", "choices": ["A sequence of three nucleotides that codes for an amino acid", "A type of RNA", "A type of protein", "A section of DNA"], "ans": 0, "explain": "A codon is a sequence of three nucleotides in mRNA that codes for a specific amino acid."},
+    {"id": "2-12", "q": "What is the purpose of the ribosome in translation?", "choices": ["To produce mRNA", "To synthesize amino acids", "To decode mRNA into a protein", "To repair DNA"], "ans": 2, "explain": "The ribosome decodes the mRNA sequence and assembles the amino acids into a protein."},
+    {"id": "2-13", "q": "What role does RNA polymerase play in transcription?", "choices": ["It synthesizes RNA from a DNA template", "It unwinds DNA", "It synthesizes proteins", "It cuts RNA"], "ans": 0, "explain": "RNA polymerase synthesizes RNA by using DNA as a template during transcription."},
+    {"id": "2-14", "q": "What is the role of the promoter region in DNA?", "choices": ["It signals the start of transcription", "It adds nucleotides during replication", "It carries amino acids during translation", "It terminates transcription"], "ans": 0, "explain": "The promoter region signals the start of transcription, allowing RNA polymerase to bind to DNA."},
+    {"id": "2-15", "q": "What happens during DNA replication?", "choices": ["DNA is copied to produce two identical DNA molecules", "RNA is transcribed into proteins", "Proteins are synthesized", "RNA is copied into mRNA"], "ans": 0, "explain": "During DNA replication, DNA is copied to produce two identical DNA molecules."}
+    ],
+  "3": [
+    {"id": "3-1", "q": "What does the Central Dogma of molecular biology describe?", "choices": ["DNA → RNA → Protein", "RNA → DNA → Protein", "Protein → RNA → DNA", "DNA → Protein → RNA"], "ans": 0, "explain": "The Central Dogma explains the flow of genetic information in cells from DNA to RNA to Protein."},
+    {"id": "3-2", "q": "What is the process by which mRNA is synthesized from a DNA template?", "choices": ["Replication", "Transcription", "Translation", "Splicing"], "ans": 1, "explain": "Transcription is the process of making RNA from a DNA template."},
+    {"id": "3-3", "q": "Which enzyme is responsible for synthesizing mRNA?", "choices": ["DNA polymerase", "RNA polymerase", "Ligase", "Helicase"], "ans": 1, "explain": "RNA polymerase synthesizes RNA from a DNA template during transcription."},
+    {"id": "3-4", "q": "Where does translation occur in the cell?", "choices": ["Nucleus", "Cytoplasm", "Mitochondria", "Endoplasmic Reticulum"], "ans": 1, "explain": "Translation occurs in the cytoplasm, where ribosomes synthesize proteins from mRNA."},
+    {"id": "3-5", "q": "What is the role of ribosomal RNA (rRNA) in translation?", "choices": ["Carries amino acids to ribosomes", "Serves as a template for protein synthesis", "Forms part of the ribosome structure", "Decodes mRNA"], "ans": 2, "explain": "rRNA forms the core of the ribosome and catalyzes protein synthesis."},
+    {"id": "3-6", "q": "What is the function of transfer RNA (tRNA) during translation?", "choices": ["Synthesizes RNA", "Carries amino acids to the ribosome", "Forms proteins", "Transcribes DNA"], "ans": 1, "explain": "tRNA transports amino acids to the ribosome to be incorporated into proteins during translation."},
+    {"id": "3-7", "q": "Which process results in the creation of mRNA from a DNA template?", "choices": ["Replication", "Transcription", "Translation", "Splicing"], "ans": 1, "explain": "Transcription is the process by which mRNA is synthesized using a DNA template."},
+    {"id": "3-8", "q": "Which molecule is responsible for carrying the genetic code from the nucleus to the ribosome?", "choices": ["DNA", "mRNA", "tRNA", "rRNA"], "ans": 1, "explain": "mRNA carries the genetic information from the nucleus to the ribosomes for protein synthesis."},
+    {"id": "3-9", "q": "Which of the following is involved in translating mRNA into a protein?", "choices": ["DNA polymerase", "RNA polymerase", "Ribosome", "Ligase"], "ans": 2, "explain": "The ribosome is responsible for translating mRNA into a protein by assembling amino acids."},
+    {"id": "3-10", "q": "What is the start codon in mRNA?", "choices": ["AUG", "UAA", "UAG", "UGA"], "ans": 0, "explain": "The start codon is AUG, which signals the beginning of translation and codes for methionine."},
+    {"id": "3-11", "q": "What happens during RNA splicing?", "choices": ["Exons are removed", "Introns are removed", "Both exons and introns are spliced", "None of the above"], "ans": 1, "explain": "RNA splicing removes introns (non-coding regions) and joins exons (coding regions) together to form mature mRNA."},
+    {"id": "3-12", "q": "What is the role of a codon?", "choices": ["To bind tRNA", "To code for an amino acid", "To catalyze protein synthesis", "To transcribe RNA"], "ans": 1, "explain": "A codon is a sequence of three nucleotides in mRNA that codes for a specific amino acid."},
+    {"id": "3-13", "q": "What is the purpose of the promoter region in DNA?", "choices": ["It signals the start of transcription", "It adds nucleotides during replication", "It carries amino acids during translation", "It terminates transcription"], "ans": 0, "explain": "The promoter region of DNA signals the start of transcription and guides RNA polymerase to begin RNA synthesis."},
+    {"id": "3-14", "q": "What is the function of the poly-A tail in mRNA?", "choices": ["To protect the mRNA from degradation", "To signal the start of translation", "To bind to ribosomes", "To provide a template for transcription"], "ans": 0, "explain": "The poly-A tail protects mRNA from degradation and assists in its export from the nucleus."},
+    {"id": "3-15", "q": "Which of the following is not a component of translation?", "choices": ["Ribosomes", "tRNA", "mRNA", "DNA"], "ans": 3, "explain": "DNA is not involved in translation; translation involves ribosomes, tRNA, and mRNA."} ],
+ "4": [
+    {"id": "4-1", "q": "What is the main purpose of mitosis?", "choices": ["Growth and repair", "Sexual reproduction", "Genetic recombination", "Gene editing"], "ans": 0, "explain": "Mitosis is responsible for growth, repair, and asexual reproduction by producing genetically identical cells."},
+    {"id": "4-2", "q": "How many daughter cells are produced in mitosis?", "choices": ["1", "2", "4", "8"], "ans": 1, "explain": "Mitosis results in two genetically identical daughter cells."},
+    {"id": "4-3", "q": "What is the correct sequence of phases in mitosis?", "choices": ["Prophase, Metaphase, Anaphase, Telophase", "Metaphase, Prophase, Telophase, Anaphase", "Anaphase, Metaphase, Telophase, Prophase", "Telophase, Prophase, Metaphase, Anaphase"], "ans": 0, "explain": "The correct order is Prophase, Metaphase, Anaphase, and Telophase."},
+    {"id": "4-4", "q": "In which phase of mitosis do chromosomes align at the equatorial plate?", "choices": ["Prophase", "Metaphase", "Anaphase", "Telophase"], "ans": 1, "explain": "During metaphase, chromosomes align at the equatorial plate of the cell."},
+    {"id": "4-5", "q": "Which process reduces chromosome number by half and is involved in gamete formation?", "choices": ["Mitosis", "Meiosis", "Binary fission", "Budding"], "ans": 1, "explain": "Meiosis reduces chromosome number by half and is essential for gamete formation."},
+    {"id": "4-6", "q": "What is crossing over in meiosis?", "choices": ["Exchange of genetic material between homologous chromosomes", "Separation of sister chromatids", "Replication of DNA", "Fusion of gametes"], "ans": 0, "explain": "Crossing over is the exchange of genetic material between homologous chromosomes, increasing genetic variation."},
+    {"id": "4-7", "q": "During which phase of meiosis do homologous chromosomes separate?", "choices": ["Anaphase I", "Anaphase II", "Metaphase I", "Telophase II"], "ans": 0, "explain": "During Anaphase I of meiosis, homologous chromosomes separate and move to opposite poles."},
+    {"id": "4-8", "q": "What is the final outcome of meiosis?", "choices": ["Two diploid cells", "Four haploid cells", "Two haploid cells", "One diploid cell"], "ans": 1, "explain": "Meiosis results in four haploid cells, which are the gametes (sperm or egg cells)."},
+    {"id": "4-9", "q": "Which stage of meiosis is similar to mitosis?", "choices": ["Meiosis I", "Meiosis II", "Both", "Neither"], "ans": 1, "explain": "Meiosis II is similar to mitosis because it involves the separation of sister chromatids."},
+    {"id": "4-10", "q": "What happens during prophase of meiosis I?", "choices": ["Chromosomes condense and homologous chromosomes pair up", "Chromosomes align at the equatorial plate", "Sister chromatids separate", "Spindle fibers form"], "ans": 0, "explain": "During prophase I of meiosis, chromosomes condense, and homologous chromosomes pair up in a process called synapsis."},
+    {"id": "4-11", "q": "What is the main difference between mitosis and meiosis?", "choices": ["Mitosis results in diploid cells, meiosis results in haploid cells", "Mitosis has two rounds of division, meiosis has one", "Meiosis produces identical cells, mitosis produces genetically different cells", "Mitosis occurs in germ cells, meiosis occurs in somatic cells"], "ans": 0, "explain": "Mitosis results in two diploid cells, while meiosis results in four haploid cells with half the chromosome number."},
+    {"id": "4-12", "q": "What is the role of the centromere during cell division?", "choices": ["To hold the sister chromatids together", "To form the spindle apparatus", "To separate the chromosomes", "To synthesize proteins"], "ans": 0, "explain": "The centromere holds the sister chromatids together during cell division until they are separated in anaphase."},
+    {"id": "4-13", "q": "What is a haploid cell?", "choices": ["A cell with two sets of chromosomes", "A cell with one set of chromosomes", "A cell undergoing mitosis", "A gamete with no chromosomes"], "ans": 1, "explain": "A haploid cell contains one set of chromosomes, which is typical of gametes (sperm or egg cells)."},
+    {"id": "4-14", "q": "What is synapsis?", "choices": ["The pairing of homologous chromosomes during prophase I", "The separation of sister chromatids during anaphase", "The alignment of chromosomes during metaphase", "The fusion of gametes"], "ans": 0, "explain": "Synapsis is the process in which homologous chromosomes pair up during prophase I of meiosis."},
+    {"id": "4-15", "q": "What is the difference between anaphase I and anaphase II of meiosis?", "choices": ["Homologous chromosomes separate in anaphase I, while sister chromatids separate in anaphase II", "Homologous chromosomes separate in anaphase II, while sister chromatids separate in anaphase I", "Anaphase I involves no chromosome movement", "There is no anaphase II"], "ans": 0, "explain": "In anaphase I, homologous chromosomes separate; in anaphase II, sister chromatids separate."} ],
+    5: [
+      {id: '5-1', q: 'What is a gene?', choices: ['A segment of DNA that codes for a protein', 'A unit of heredity', 'A form of genetic mutation', 'A type of RNA'], ans: 0, explain: 'A gene is a segment of DNA that contains instructions to make proteins or RNA.'},
+      {id: '5-2', q: 'What is the function of chromosomes?', choices: ['To store genetic material', 'To replicate DNA', 'To synthesize proteins', 'To produce energy'], ans: 0, explain: 'Chromosomes store and carry genetic material in the form of DNA.'},
+      {id: '5-3', q: 'What is a karyotype?', choices: ['The full set of an organism’s chromosomes', 'A gene map', 'A sequence of DNA mutations', 'A type of protein'], ans: 0, explain: 'A karyotype is an image or diagram showing an organism’s chromosomes, arranged in pairs.'},
+      {id: '5-4', q: 'How many chromosomes are typically present in a human somatic cell?', choices: ['23', '46', '92', '48'], ans: 1, explain: 'Human somatic cells typically contain 46 chromosomes, or 23 pairs.'},
+      {id: '5-5', q: 'What is the term for the two identical copies of a chromosome after DNA replication?', choices: ['Sister chromatids', 'Homologous chromosomes', 'Alleles', 'Centromeres'], ans: 0, explain: 'After DNA replication, each chromosome consists of two identical sister chromatids connected at the centromere.'},
+      {id: '5-6', q: 'What is the significance of homologous chromosomes?', choices: ['They are identical chromosomes from the same parent', 'They are chromosomes that carry the same genes but may have different alleles', 'They pair during anaphase of mitosis', 'They do not participate in sexual reproduction'], ans: 1, explain: 'Homologous chromosomes are pairs of chromosomes that carry the same genes but may have different alleles.'},
+      {id: '5-7', q: 'What is the process called where homologous chromosomes exchange genetic material during meiosis?', choices: ['Crossing-over', 'Replication', 'Translation', 'Transcription'], ans: 0, explain: 'Crossing-over is the process where homologous chromosomes exchange portions of their chromatids, increasing genetic variation.'},
+      {id: '5-8', q: 'What is an allele?', choices: ['A variant of a gene', 'A segment of RNA', 'A type of mutation', 'A protein'], ans: 0, explain: 'An allele is a variant of a gene that can produce different traits, such as eye color.'},
+      {id: '5-9', q: 'What is a genetic locus?', choices: ['A location on a chromosome', 'A type of allele', 'A form of mutation', 'The sequence of nucleotides in a gene'], ans: 0, explain: 'A locus is the specific physical location of a gene or other significant sequence on a chromosome.'},
+      {id: '5-10', q: 'Which of the following is true about X and Y chromosomes?', choices: ['X chromosomes are larger and carry more genes', 'Y chromosomes are more common in females', 'Y chromosomes determine female sex', 'X chromosomes determine male sex'], ans: 0, explain: 'The X chromosome is larger and carries more genes compared to the Y chromosome, which determines male sex in humans.'},
+      {id: '5-11', q: 'What does a phenotype refer to?', choices: ['The genetic composition of an organism', 'The physical expression of genes', 'The location of genes on chromosomes', 'The process of gene replication'], ans: 1, explain: 'A phenotype refers to the observable physical characteristics of an organism resulting from its genotype.'},
+      {id: '5-12', q: 'What is a genetic mutation?', choices: ['A change in the sequence of DNA', 'A copy of DNA', 'The process of transcription', 'A gene that is not expressed'], ans: 0, explain: 'A genetic mutation is a change in the DNA sequence that can alter the function of a gene.'},
+      {id: '5-13', q: 'What is the role of the centromere?', choices: ['It holds the sister chromatids together', 'It carries genetic information', 'It forms the spindle apparatus', 'It synthesizes DNA'], ans: 0, explain: 'The centromere holds sister chromatids together until they are separated during cell division.'},
+      {id: '5-14', q: 'Which of the following is true about a gene mutation?', choices: ['It always results in a genetic disorder', 'It can occur due to environmental factors or errors during DNA replication', 'It always causes an observable phenotype', 'It cannot be passed to offspring'], ans: 1, explain: 'Gene mutations can occur due to environmental factors or errors during DNA replication, and not all mutations result in disorders or visible traits.'},
+      {id: '5-15', q: 'What is the role of telomeres in chromosomes?', choices: ['They protect the ends of chromosomes from damage', 'They control cell division', 'They help chromosomes pair during meiosis', 'They repair damaged DNA'], ans: 0, explain: 'Telomeres are repetitive DNA sequences at the ends of chromosomes that protect them from degradation during cell division.'} ],
+    6: [
+      {id: '6-1', q: 'What is a point mutation?', choices: ['A change in a single nucleotide', 'A shift in the entire chromosome', 'The loss of a segment of DNA', 'A change in chromosome number'], ans: 0, explain: 'A point mutation is a change in a single nucleotide base in the DNA sequence.'},
+      {id: '6-2', q: 'What is a silent mutation?', choices: ['A mutation that has no effect on the protein sequence', 'A mutation that causes a frameshift', 'A mutation that results in a stop codon', 'A mutation that changes an amino acid'], ans: 0, explain: 'A silent mutation does not change the amino acid sequence of the protein due to redundancy in the genetic code.'},
+      {id: '6-3', q: 'What is a frameshift mutation?', choices: ['A mutation that shifts the reading frame of the gene', 'A mutation that inserts a stop codon', 'A mutation that results in no change to the protein', 'A mutation that changes a single nucleotide'], ans: 0, explain: 'A frameshift mutation occurs when nucleotides are inserted or deleted, shifting the reading frame of the gene.'},
+      {id: '6-4', q: 'What type of mutation causes sickle cell anemia?', choices: ['Point mutation', 'Insertion mutation', 'Deletion mutation', 'Duplication mutation'], ans: 0, explain: 'Sickle cell anemia is caused by a point mutation in the hemoglobin gene that results in a change in one amino acid.'},
+      {id: '6-5', q: 'What is a nonsense mutation?', choices: ['A mutation that creates a premature stop codon', 'A mutation that adds an extra amino acid', 'A mutation that changes one nucleotide', 'A mutation that results in no protein being made'], ans: 0, explain: 'A nonsense mutation results in a premature stop codon, leading to the truncation of the protein.'},
+      {id: '6-6', q: 'What is the term for the addition of extra nucleotides in a DNA sequence?', choices: ['Insertion mutation', 'Deletion mutation', 'Substitution mutation', 'Duplication mutation'], ans: 0, explain: 'An insertion mutation occurs when extra nucleotides are added to a DNA sequence, which may cause a frameshift.'},
+      {id: '6-7', q: 'What is a missense mutation?', choices: ['A mutation that changes one amino acid in a protein', 'A mutation that deletes part of the DNA sequence', 'A mutation that results in a stop codon', 'A mutation that causes no effect on the protein'], ans: 0, explain: 'A missense mutation changes one amino acid in the protein, which may affect the protein’s function.'},
+      {id: '6-8', q: 'What is a chromosomal inversion?', choices: ['A segment of a chromosome is reversed', 'A segment of a chromosome is lost', 'A segment of a chromosome is duplicated', 'A chromosome is completely rearranged'], ans: 0, explain: 'A chromosomal inversion occurs when a segment of a chromosome is reversed, altering the gene order.'},
+      {id: '6-9', q: 'What is a duplication mutation?', choices: ['A segment of DNA is copied', 'A base pair is substituted', 'A gene is deleted', 'A chromosome is split into two'], ans: 0, explain: 'A duplication mutation occurs when a segment of DNA is copied, leading to multiple copies of the affected gene.'},
+      {id: '6-10', q: 'What causes Down syndrome?', choices: ['A point mutation in a gene', 'A chromosomal trisomy', 'A frameshift mutation', 'A deletion mutation'], ans: 1, explain: 'Down syndrome is caused by a trisomy of chromosome 21, where an individual has three copies of this chromosome instead of two.'},
+      {id: '6-11', q: 'What is a translocation mutation?', choices: ['The exchange of genetic material between non-homologous chromosomes', 'The addition of a new gene into a chromosome', 'The loss of a part of a chromosome', 'The duplication of a segment of a chromosome'], ans: 0, explain: 'A translocation mutation involves the exchange of genetic material between non-homologous chromosomes.'},
+      {id: '6-12', q: 'Which of the following mutations is most likely to be harmful?', choices: ['A missense mutation', 'A silent mutation', 'A frameshift mutation', 'A neutral mutation'], ans: 2, explain: 'Frameshift mutations often lead to significant changes in protein structure and function, making them more harmful.'},
+      {id: '6-13', q: 'What is a duplication mutation?', choices: ['A segment of DNA is copied', 'A gene is deleted', 'A chromosome is rearranged', 'A nucleotide is substituted'], ans: 0, explain: 'A duplication mutation involves the replication of a segment of DNA, which may result in extra copies of a gene or region.'},
+      {id: '6-14', q: 'What is the effect of a deletion mutation?', choices: ['Loss of genetic material', 'Addition of extra nucleotides', 'Creation of a stop codon', 'Shift in the reading frame'], ans: 0, explain: 'A deletion mutation results in the loss of a segment of DNA, which can lead to loss of function or altered protein production.'},
+      {id: '6-15', q: 'What does genetic recombination in meiosis contribute to?', choices: ['Genetic diversity', 'Chromosomal duplication', 'Gene mutation', 'DNA replication'], ans: 0, explain: 'Genetic recombination during meiosis leads to genetic diversity in offspring, as genes are shuffled between homologous chromosomes.'} ],
+    7: [
+      {id: '7-1', q: 'What is Mendel’s Law of Segregation?', choices: ['Each organism has two alleles for each gene, which separate during gamete formation', 'Genes for different traits assort independently', 'The phenotype is determined solely by the environment', 'Alleles are inherited in pairs'], ans: 0, explain: 'Mendel’s Law of Segregation states that alleles for a gene segregate, or separate, during gamete formation, with each gamete receiving one allele.'},
+      {id: '7-2', q: 'What does a homozygous genotype consist of?', choices: ['Two different alleles for a gene', 'Two identical alleles for a gene', 'One dominant allele and one recessive allele', 'No alleles for a gene'], ans: 1, explain: 'A homozygous genotype consists of two identical alleles for a particular gene, either both dominant or both recessive.'},
+      {id: '7-3', q: 'What is a Punnett square used for?', choices: ['To predict the probability of genetic inheritance', 'To identify dominant alleles', 'To map chromosomes', 'To detect mutations in genes'], ans: 0, explain: 'A Punnett square is a tool used to predict the probability of offspring inheriting specific genotypes based on the parents’ genotypes.'},
+      {id: '7-4', q: 'What is a phenotype?', choices: ['The genetic makeup of an organism', 'The physical traits of an organism', 'The number of chromosomes in an organism', 'The environment of an organism'], ans: 1, explain: 'Phenotype refers to the observable physical characteristics of an organism, determined by its genotype and environmental influences.'},
+      {id: '7-5', q: 'What is the genotype of an individual with a heterozygous allele pair for a dominant trait?', choices: ['AA', 'Aa', 'aa', 'None of the above'], ans: 1, explain: 'A heterozygous genotype consists of one dominant allele and one recessive allele, represented by Aa.'},
+      {id: '7-6', q: 'What is a carrier in genetic terms?', choices: ['A person who expresses a recessive trait', 'A person who carries a dominant allele', 'A person who carries a recessive allele for a genetic disorder but does not express the disorder', 'A person who has two identical alleles for a gene'], ans: 2, explain: 'A carrier is an individual who carries one copy of a recessive allele for a genetic disorder but does not express the disorder because the dominant allele masks it.'},
+      {id: '7-7', q: 'What is a dihybrid cross used to study?', choices: ['Inheritance of two traits simultaneously', 'Inheritance of a single trait', 'Inheritance of linked genes', 'Patterns of gene mutation'], ans: 0, explain: 'A dihybrid cross is used to study the inheritance of two traits simultaneously, typically using two pairs of alleles.'},
+      {id: '7-8', q: 'What is the phenotypic ratio of a dihybrid cross between two heterozygous individuals?', choices: ['1:1', '9:3:3:1', '3:1', '1:2:1'], ans: 1, explain: 'The phenotypic ratio for a dihybrid cross between two heterozygous individuals is typically 9:3:3:1.'},
+      {id: '7-9', q: 'What does the term "incomplete dominance" refer to?', choices: ['When one allele completely masks the other allele', 'When both alleles are equally expressed', 'When the phenotype is a blend of two alleles', 'When an allele is inherited from only one parent'], ans: 2, explain: 'Incomplete dominance occurs when the phenotype is a blend of the traits from both alleles, such as in pink flowers resulting from red and white parents.'},
+      {id: '7-10', q: 'Which of the following represents a test cross?', choices: ['Crossing two homozygous individuals', 'Crossing an individual with a dominant phenotype with a homozygous recessive individual', 'Crossing two heterozygous individuals', 'Crossing individuals with identical genotypes'], ans: 1, explain: 'A test cross involves crossing an individual with a dominant phenotype but unknown genotype with a homozygous recessive individual to determine the genotype of the first parent.'},
+      {id: '7-11', q: 'What is the principle of independent assortment?', choices: ['Genes for different traits assort independently during gamete formation', 'Genes for the same trait assort independently', 'Genes for recessive traits are more likely to assort independently', 'Homologous chromosomes always assort together'], ans: 0, explain: 'Mendel’s principle of independent assortment states that genes for different traits are inherited independently of one another.'},
+      {id: '7-12', q: 'What does a codominance pattern of inheritance look like?', choices: ['One allele is dominant over the other', 'Both alleles contribute equally and are expressed in the phenotype', 'The phenotype is a blend of two alleles', 'One allele is masked by another'], ans: 1, explain: 'In codominance, both alleles contribute equally to the phenotype and are expressed simultaneously, such as in the AB blood group.'},
+      {id: '7-13', q: 'What is the difference between autosomal and sex-linked inheritance?', choices: ['Autosomal traits are linked to the X chromosome, while sex-linked traits are not', 'Autosomal traits are inherited equally by both genders, while sex-linked traits are typically inherited by males', 'Autosomal traits are inherited through mitochondria, while sex-linked traits are inherited through the X chromosome', 'Sex-linked traits are autosomal traits with extra copies'], ans: 1, explain: 'Autosomal traits are inherited from chromosomes that are not sex chromosomes, whereas sex-linked traits are associated with genes found on the sex chromosomes, often the X chromosome.'},
+      {id: '7-14', q: 'What is the principle of segregation?', choices: ['Each individual has two alleles for a gene, which separate during gamete formation', 'Genes for different traits assort independently', 'Traits are inherited as discrete units', 'Both A and B'], ans: 0, explain: 'Mendel’s principle of segregation states that the two alleles for a gene separate during gamete formation, ensuring that each gamete carries only one allele.'},
+      {id: '7-15', q: 'What is the result of crossing two heterozygous individuals for a single trait?', choices: ['1:1 ratio', '3:1 ratio', '9:3:3:1 ratio', '100% homozygous dominant'], ans: 1, explain: 'When two heterozygous individuals are crossed for a single trait, the expected phenotypic ratio is 3:1.'} ],
+    8: [
+      {id: '8-1', q: 'What is a karyotype used to diagnose?', choices: ['Genetic disorders', 'Viral infections', 'Blood pressure', 'Body mass index'], ans: 0, explain: 'A karyotype is used to examine the number and structure of chromosomes to diagnose genetic disorders like Down syndrome.'},
+      {id: '8-2', q: 'What is a chromosomal aberration?', choices: ['A change in the chromosome structure', 'A change in gene sequence', 'A mutation in the mitochondrial DNA', 'A change in nucleotide bases'], ans: 0, explain: 'Chromosomal aberrations are structural or numerical changes in chromosomes, which can lead to genetic disorders.'},
+      {id: '8-3', q: 'Which of the following is a type of chromosomal structural mutation?', choices: ['Deletion', 'Duplication', 'Inversion', 'All of the above'], ans: 3, explain: 'Deletion, duplication, and inversion are all types of chromosomal structural mutations that can impact gene function.'},
+      {id: '8-4', q: 'What does FISH stand for in cytogenetics?', choices: ['Fluorescence In Situ Hybridization', 'Genetic Sequence Mapping', 'Functional Imaging of Structural Heterogeneity', 'Functional In Situ Hybridization'], ans: 0, explain: 'FISH (Fluorescence In Situ Hybridization) is a technique used to detect specific DNA sequences on chromosomes using fluorescent probes.'},
+      {id: '8-5', q: 'What is the difference between trisomy and monosomy?', choices: ['Trisomy has an extra chromosome, monosomy is missing one chromosome', 'Trisomy is a condition in gametes, monosomy occurs during mitosis', 'Trisomy involves more than two sets of chromosomes, monosomy is a chromosomal disorder', 'Trisomy involves two copies of each chromosome, monosomy involves three copies'], ans: 0, explain: 'Trisomy occurs when there is an extra chromosome (such as in Down syndrome), while monosomy occurs when a chromosome is missing (such as in Turner syndrome).'},
+      {id: '8-6', q: 'What type of cytogenetic analysis can detect large chromosomal deletions or duplications?', choices: ['Karyotyping', 'FISH', 'PCR', 'Southern blot'], ans: 1, explain: 'FISH is a cytogenetic technique used to detect chromosomal deletions, duplications, and other structural abnormalities.'},
+      {id: '8-7', q: 'What is the result of a chromosomal inversion?', choices: ['A part of the chromosome is reversed', 'A part of the chromosome is duplicated', 'A part of the chromosome is lost', 'The chromosome splits into two pieces'], ans: 0, explain: 'In a chromosomal inversion, a segment of the chromosome is reversed, which may affect gene expression.'},
+      {id: '8-8', q: 'What is the main purpose of polymerase chain reaction (PCR) in cytogenetics?', choices: ['To amplify DNA for analysis', 'To create fluorescent markers', 'To replicate RNA', 'To measure gene expression'], ans: 0, explain: 'PCR is used to amplify DNA, making it easier to analyze specific genetic regions or mutations.'},
+      {id: '8-9', q: 'What chromosomal abnormality causes Down syndrome?', choices: ['Trisomy 21', 'Monosomy X', 'Trisomy 18', 'Trisomy 13'], ans: 0, explain: 'Down syndrome is caused by trisomy 21, which means there is an extra copy of chromosome 21.'},
+      {id: '8-10', q: 'What are telomeres?', choices: ['Regions at the ends of chromosomes that protect them from degradation', 'Parts of the chromosome where gene mutations occur', 'Portions of the chromosome responsible for genetic inheritance', 'The center portion of a chromosome'], ans: 0, explain: 'Telomeres are repetitive sequences at the ends of chromosomes that protect them from degradation during cell division.'},
+      {id: '8-11', q: 'What does the term “aneuploidy” refer to?', choices: ['An abnormal number of chromosomes', 'A rearranged chromosome structure', 'The presence of an extra gene', 'The presence of missing genes'], ans: 0, explain: 'Aneuploidy refers to an abnormal number of chromosomes, such as in conditions like trisomy or monosomy.'},
+      {id: '8-12', q: 'What is the chromosomal condition in Klinefelter syndrome?', choices: ['XXY', 'XXX', 'X0', 'XYY'], ans: 0, explain: 'Klinefelter syndrome occurs when a male has two X chromosomes and one Y chromosome (XXY).'},
+      {id: '8-13', q: 'What is the purpose of array CGH (comparative genomic hybridization)?', choices: ['To detect chromosomal imbalances', 'To sequence entire genomes', 'To amplify DNA', 'To visualize gene expression'], ans: 0, explain: 'Array CGH is a technique used to detect chromosomal imbalances, such as deletions or duplications of chromosomal segments.'},
+      {id: '8-14', q: 'What is the typical number of chromosomes in a human gamete?', choices: ['46', '23', '92', '44'], ans: 1, explain: 'Human gametes (sperm and egg cells) contain 23 chromosomes, one from each pair of the 46 chromosomes in somatic cells.'},
+      {id: '8-15', q: 'Which of the following techniques can be used to detect single-nucleotide polymorphisms (SNPs)?', choices: ['PCR', 'FISH', 'Array CGH', 'Sanger sequencing'], ans: 3, explain: 'Sanger sequencing can detect single-nucleotide polymorphisms (SNPs), which are variations at a single nucleotide in the DNA sequence.'} ],
+   9: [
+      {id: '9-1', q: 'What is the human genome?', choices: ['The complete set of genes in the human body', 'The genetic material from the mother', 'The DNA in a single human chromosome', 'The total number of chromosomes'], ans: 0, explain: 'The human genome consists of the complete set of genes and genetic material in human DNA, containing about 20,000–25,000 genes.'},
+      {id: '9-2', q: 'What is gene therapy?', choices: ['A technique used to treat or prevent disease by modifying genes', 'A method of cloning organisms', 'A way to replace proteins in cells', 'A form of genetic mutation'], ans: 0, explain: 'Gene therapy is an experimental technique used to treat or prevent disease by inserting, altering, or removing genes within a patient’s cells.'},
+      {id: '9-3', q: 'What is the role of PCR (Polymerase Chain Reaction) in human genetics?', choices: ['Amplifies specific DNA sequences for analysis', 'Repairs DNA mutations', 'Synthesizes proteins from DNA', 'Cuts DNA into fragments'], ans: 0, explain: 'PCR is used to amplify specific DNA sequences, making it easier to analyze and study genes in human genetics.'},
+      {id: '9-4', q: 'What are single nucleotide polymorphisms (SNPs)?', choices: ['Genetic variations where a single nucleotide is altered', 'Mutations in entire genes', 'Repetitive DNA sequences', 'Chromosomal abnormalities'], ans: 0, explain: 'SNPs are variations at a single nucleotide in a DNA sequence that can affect gene function and contribute to diseases.'},
+      {id: '9-5', q: 'What is CRISPR technology used for?', choices: ['Gene editing', 'Protein synthesis', 'DNA replication', 'Chromosome separation'], ans: 0, explain: 'CRISPR is a technology used to edit genes by adding, removing, or altering DNA at specific locations.'},
+      {id: '9-6', q: 'What is a genetic marker?', choices: ['A gene or DNA sequence with a known location on a chromosome', 'A mutation that causes disease', 'A protein that synthesizes DNA', 'A specific protein product of a gene'], ans: 0, explain: 'A genetic marker is a gene or DNA sequence with a known location on a chromosome, used to identify individuals or species.'},
+      {id: '9-7', q: 'What is the function of restriction enzymes?', choices: ['Cut DNA at specific sequences', 'Synthesize RNA', 'Regulate gene expression', 'Repair DNA damage'], ans: 0, explain: 'Restriction enzymes are proteins that cut DNA at specific sequences, commonly used in genetic research and molecular cloning.'},
+      {id: '9-8', q: 'Which of the following is a genetic disorder caused by a mutation in a single gene?', choices: ['Cystic fibrosis', 'Down syndrome', 'Turner syndrome', 'Klinefelter syndrome'], ans: 0, explain: 'Cystic fibrosis is a genetic disorder caused by mutations in a single gene (CFTR gene) that affects the lungs and digestive system.'},
+      {id: '9-9', q: 'What is an example of a multifactorial genetic disorder?', choices: ['Diabetes', 'Sickle cell anemia', 'Huntington’s disease', 'Cystic fibrosis'], ans: 0, explain: 'Diabetes is a multifactorial disorder, influenced by both genetic and environmental factors.'},
+      {id: '9-10', q: 'What is the role of genetic counseling?', choices: ['To provide advice about genetic testing and risks of inheritance', 'To treat genetic disorders', 'To enhance gene expression', 'To eliminate genetic mutations'], ans: 0, explain: 'Genetic counseling provides information about the risks of genetic conditions and helps individuals make informed decisions about genetic testing and family planning.'},
+      {id: '9-11', q: 'What is a gene knockout?', choices: ['The removal of a gene from an organism’s genome', 'The duplication of a gene', 'A mutation that leads to gene overexpression', 'The insertion of foreign DNA into a gene'], ans: 0, explain: 'Gene knockout is a technique used to create an organism that lacks a specific gene, allowing researchers to study its function.'},
+      {id: '9-12', q: 'What is the significance of mitochondrial DNA?', choices: ['It is inherited only from the mother and can be used to trace maternal lineage', 'It is identical in every cell', 'It is responsible for protein synthesis', 'It is unaffected by mutations'], ans: 0, explain: 'Mitochondrial DNA is inherited only from the mother and is often used in tracing maternal ancestry and studying mitochondrial diseases.'},
+      {id: '9-13', q: 'What is the process of genome sequencing?', choices: ['Determining the complete sequence of an organism’s DNA', 'Editing a specific gene sequence', 'Cloning an organism', 'Changing the DNA sequence of a single gene'], ans: 0, explain: 'Genome sequencing involves determining the complete DNA sequence of an organism’s genome, allowing for the study of its genetic makeup.'},
+      {id: '9-14', q: 'What is a transgenic organism?', choices: ['An organism that contains foreign DNA', 'An organism with two sets of chromosomes', 'An organism that can reproduce sexually', 'An organism with no genetic variation'], ans: 0, explain: 'A transgenic organism contains foreign DNA that has been introduced into its genome, often used in research and agriculture.'},
+      {id: '9-15', q: 'What is gene therapy most commonly used for?', choices: ['To treat inherited genetic disorders', 'To enhance physical traits', 'To clone organisms', 'To alter non-heritable traits'], ans: 0, explain: 'Gene therapy is primarily used to treat inherited genetic disorders by correcting or replacing faulty genes within a patient’s cells.'} ],	
+   10: [
+      {id: '10-1', q: 'What does the chromosome theory of inheritance state?', choices: ['Genes are located on chromosomes and inherited according to Mendel’s laws', 'Chromosomes are made of protein', 'Chromosomes are inherited independently of genes', 'Genes are randomly distributed during cell division'], ans: 0, explain: 'The chromosome theory of inheritance states that genes are located on chromosomes and follow Mendelian inheritance patterns.'},
+      {id: '10-2', q: 'What is the role of the centromere in chromosome inheritance?', choices: ['It connects sister chromatids during cell division', 'It contains the genetic material', 'It repairs damaged DNA', 'It helps in crossing over during meiosis'], ans: 0, explain: 'The centromere is the region of a chromosome where the two sister chromatids are joined together and where spindle fibers attach during cell division.'},
+      {id: '10-3', q: 'What is the result of a crossover event in meiosis?', choices: ['Exchange of genetic material between homologous chromosomes', 'Replication of DNA', 'Separation of sister chromatids', 'Production of identical chromosomes'], ans: 0, explain: 'Crossing over during meiosis results in the exchange of genetic material between homologous chromosomes, increasing genetic variation.'},
+      {id: '10-4', q: 'What does independent assortment refer to in genetics?', choices: ['The random distribution of chromosomes into gametes', 'The combination of dominant and recessive alleles', 'The process by which chromosomes are replicated', 'The formation of genetic mutations'], ans: 0, explain: 'Independent assortment refers to the random distribution of maternal and paternal chromosomes into gametes during meiosis, contributing to genetic diversity.'},
+      {id: '10-5', q: 'Which of the following are true about sex-linked inheritance?', choices: ['Genes on the X chromosome show different inheritance patterns in males and females', 'Sex-linked traits are equally inherited by both genders', 'Only males inherit X-linked traits', 'X-linked traits only affect females'], ans: 0, explain: 'Sex-linked traits are carried on the X chromosome and exhibit different inheritance patterns in males and females because males have only one X chromosome.'},
+      {id: '10-6', q: 'What is an example of a sex-linked genetic disorder?', choices: ['Hemophilia', 'Down syndrome', 'Cystic fibrosis', 'Alzheimer’s disease'], ans: 0, explain: 'Hemophilia is a sex-linked genetic disorder caused by a mutation in the X chromosome, leading to difficulty with blood clotting.'},
+      {id: '10-7', q: 'What is the law of independent assortment?', choices: ['The genes for different traits are inherited independently of each other', 'Alleles segregate during gamete formation', 'Genes are inherited as a unit', 'Genes for different traits can be linked together'], ans: 0, explain: 'Mendel’s law of independent assortment states that genes for different traits are inherited independently of one another during gamete formation.'},
+      {id: '10-8', q: 'What is the term for when two genes are located close together on the same chromosome?', choices: ['Gene linkage', 'Gene crossing-over', 'Gene duplication', 'Gene mutation'], ans: 0, explain: 'When two genes are located close together on the same chromosome, they tend to be inherited together, a phenomenon known as gene linkage.'},
+      {id: '10-9', q: 'What is the difference between linked and unlinked genes?', choices: ['Linked genes are inherited together, while unlinked genes assort independently', 'Linked genes assort independently, while unlinked genes are inherited together', 'Linked genes are located on different chromosomes, while unlinked genes are on the same chromosome', 'There is no difference between linked and unlinked genes'], ans: 0, explain: 'Linked genes are located on the same chromosome and tend to be inherited together, while unlinked genes are located on different chromosomes and assort independently.'},
+      {id: '10-10', q: 'Which phase of meiosis is associated with independent assortment?', choices: ['Metaphase I', 'Anaphase I', 'Prophase II', 'Telophase II'], ans: 0, explain: 'Independent assortment occurs during metaphase I, when homologous chromosomes are randomly arranged at the equatorial plate.'},
+      {id: '10-11', q: 'What is the role of the spindle fibers in meiosis?', choices: ['To separate chromosomes during cell division', 'To duplicate DNA', 'To synthesize proteins', 'To form gametes'], ans: 0, explain: 'Spindle fibers are responsible for separating chromosomes during cell division, ensuring that each daughter cell receives a correct set of chromosomes.'},
+      {id: '10-12', q: 'How does the chromosome theory of inheritance support Mendel’s laws?', choices: ['It shows that genes are located on chromosomes and inherited according to Mendel’s laws', 'It demonstrates that genetic material is passed in sets', 'It states that traits are controlled by linked genes', 'It proves that inheritance is random'], ans: 0, explain: 'The chromosome theory of inheritance supports Mendel’s laws by showing that genes are located on chromosomes and inherited according to Mendel’s principles of segregation and independent assortment.'},
+      {id: '10-13', q: 'What is the difference between autosomal and sex chromosomes?', choices: ['Autosomal chromosomes are non-sex chromosomes, while sex chromosomes determine gender', 'Autosomal chromosomes determine gender, while sex chromosomes are non-sex chromosomes', 'There is no difference between autosomal and sex chromosomes', 'Sex chromosomes are only inherited from the mother'], ans: 0, explain: 'Autosomal chromosomes are non-sex chromosomes and contain most of the genetic material, while sex chromosomes determine an individual’s gender (X and Y chromosomes).'},
+      {id: '10-14', q: 'What happens in nondisjunction during meiosis?', choices: ['Chromosomes fail to separate properly', 'Homologous chromosomes pair incorrectly', 'Genes are exchanged between chromosomes', 'Sister chromatids do not replicate'], ans: 0, explain: 'Nondisjunction occurs when chromosomes fail to separate properly during meiosis, leading to gametes with an abnormal number of chromosomes.'},
+      {id: '10-15', q: 'Which genetic condition is caused by an extra chromosome 21?', choices: ['Down syndrome', 'Turner syndrome', 'Klinefelter syndrome', 'Fragile X syndrome'], ans: 0, explain: 'Down syndrome is caused by trisomy 21, where individuals have three copies of chromosome 21 instead of two.'} ],
+
+ 	  }
+};
+
+for (let i = 4; i <= 15; i++) {
+  if (!config.questions[i]) config.questions[i] = [];
+}
+
+const lectureSelect = document.getElementById('lectureSelect');
+const quizArea = document.getElementById('quizArea');
+const startBtn = document.getElementById('startBtn');
+const scoreBtn = document.getElementById('scoreBtn');
+const resetBtn = document.getElementById('resetBtn');
+const exportBtn = document.getElementById('exportBtn');
+const summary = document.getElementById('summary');
+
+// Populating lecture selection dropdown
+for (let i = 1; i <= 15; i++) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `Lecture ${i} — ${config.lectureCounts[i] || 0} q`;
+  lectureSelect.appendChild(opt);
+}
+
+let userAnswers = {};
+
+function shuffleArray(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderLecture(lec) {
+  quizArea.innerHTML = '';
+  summary.style.display = 'none';
+  userAnswers = {};
+  const pool = config.questions[lec] || [];
+  const needed = config.lectureCounts[lec] || pool.length;
+  let items = [...pool];
+  while (items.length < needed) {
+    items.push({ id: `${lec}-ph-${items.length + 1}`, q: `[PLACEHOLDER] Add question ${items.length + 1}`, choices: ['A', 'B', 'C', 'D'], ans: Math.floor(Math.random() * 4), explain: 'Replace this.' });
+  }
+  items = items.slice(0, needed);
+  items = shuffleArray(items);
+  items.forEach((it, idx) => {
+    const el = document.createElement('div');
+    el.className = 'question';
+    el.innerHTML = `<div><span class="lecture-badge">Lecture ${lec}</span> <strong>Q${idx + 1}:</strong> ${it.q}</div>`;
+    const choicesWrap = document.createElement('div');
+    choicesWrap.className = 'choices';
+    const choiceObjs = it.choices.map((c, i) => ({ text: c, origIndex: i }));
+    shuffleArray(choiceObjs);
+    choiceObjs.forEach((cobj, ci) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.innerHTML = `${String.fromCharCode(65 + ci)}. ${cobj.text}`;
+      btn.addEventListener('click', () => {
+        if (el.dataset.answered) return;
+        el.dataset.answered = '1';
+        const correct = (cobj.origIndex === it.ans);
+        btn.classList.add(correct ? 'correct' : 'wrong');
+        const explainDiv = document.createElement('div');
+        explainDiv.className = 'explain';
+        explainDiv.innerHTML = `<strong>${correct ? 'Correct' : 'Incorrect'}</strong> — ${it.explain || ''}`;
+        choicesWrap.querySelectorAll('button').forEach(b => b.disabled = true);
+        choicesWrap.appendChild(explainDiv);
+        userAnswers[it.id] = correct;
+      });
+      choicesWrap.appendChild(btn);
+    });
+    el.appendChild(choicesWrap);
+    quizArea.appendChild(el);
+  });
+}
+
+startBtn.addEventListener('click', () => { renderLecture(lectureSelect.value); });
+
+scoreBtn.addEventListener('click', () => {
+  const total = Object.keys(userAnswers).length;
+  const correct = Object.values(userAnswers).filter(v => v).length;
+  summary.style.display = 'block';
+  summary.innerHTML = `<strong>Score:</strong> ${correct}/${config.lectureCounts[lectureSelect.value] || total}`;
+});
+
+resetBtn.addEventListener('click', () => { quizArea.innerHTML = ''; summary.style.display = 'none'; userAnswers = {}; });
+
+exportBtn.addEventListener('click', () => {
+  const data = { lecture: +lectureSelect.value, answers: userAnswers };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `lecture-${lectureSelect.value}-answers.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
