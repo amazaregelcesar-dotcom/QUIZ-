@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Velez College Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Sidebar Section -->
+    <nav class="sidebar">
+        <div class="logo">
+            <h2>Velez College</h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="#">Courses</a></li>
+            <li><a href="#">Messages</a></li>
+            <li><a href="#">Settings</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Section -->
+    <main class="main-content">
+        <header>
+            <h1>Welcome to Your Dashboard</h1>
+        </header>
+
+        <!-- Profile Section -->
+        <section class="profile">
+            <h2>Your Profile</h2>
+            <div class="profile-card">
+                <img src="https://via.placeholder.com/150" alt="Profile Picture" class="profile-pic">
+                <input type="text" id="username" value="John Doe" class="profile-name" />
+                <button id="edit-profile" class="btn">Edit Profile</button>
+            </div>
+        </section>
+
+        <!-- Subject Folders Section -->
+        <section class="subjects">
+            <h2>Your Subjects</h2>
+            <div class="subject-folder" id="subject-folder">
+                <!-- Dynamic subject folders will appear here -->
+            </div>
+            <button id="add-subject" class="btn">Add Subject</button>
+        </section>
+
+        <!-- Class Schedule Section -->
+        <section class="schedule">
+            <h2>Class Schedule</h2>
+            <div class="schedule-table" id="schedule-table">
+                <!-- Customizable Schedule Rows will appear here -->
+            </div>
+            <button id="add-class" class="btn">Add Class</button>
+        </section>
+
+        <!-- Performance Chart Section -->
+        <section class="chart">
+            <h2>Performance Chart</h2>
+            <div id="chart-container">
+                <canvas id="myChart"></canvas>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    height: 100vh;
+    background-color: #f0f2f5;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #1a4d2e; /* Dark Green */
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.sidebar .logo h2 {
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 40px;
+    letter-spacing: 2px;
+}
+
+.sidebar .nav-links {
+    list-style-type: none;
+}
+
+.sidebar .nav-links li {
+    margin-bottom: 20px;
+}
+
+.sidebar .nav-links li a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    transition: 0.3s;
+}
+
+.sidebar .nav-links li a:hover {
+    color: #a8d08d; /* Light Green */
+}
+
+.main-content {
+    flex: 1;
+    padding: 40px;
+    background-color: #fff;
+}
+
+header {
+    background-color: #2c6b3f; /* Slightly lighter green */
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 40px;
+}
+
+header h1 {
+    font-size: 30px;
+    font-weight: 600;
+}
+
+.profile {
+    margin-bottom: 40px;
+}
+
+.profile h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.profile-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.profile-pic {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile-name {
+    font-size: 18px;
+    padding: 8px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+}
+
+.btn {
+    padding: 10px 20px;
+    background-color: #1a4d2e;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #2c6b3f;
+}
+
+.subjects {
+    margin-bottom: 40px;
+}
+
+.subjects h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.subject-folder {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.folder {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.folder:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.folder-content {
+    display: none;
+    margin-top: 10px;
+}
+
+.schedule {
+    margin-bottom: 40px;
+}
+
+.schedule h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.schedule-row {
+    display: flex;
+    margin-bottom: 15px;
+}
+
+.schedule-time {
+    width: 20%;
+    font-weight: 600;
+}
+
+.schedule-details {
+    width: 30%;
+    padding: 8px;
+    background-color: #ecf0f1;
+    border-radius: 8px;
+    margin-left: 10px;
+}
+
+.chart {
+    margin-top: 40px;
+}
+
+#chart-container {
+    background-color: #ecf0f1;
+    padding: 20px;
+    border-radius: 12px;
+    height: 400px;
+}
+
+input[type="file"] {
+    display: block;
+    margin-top: 10px;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    loadSubjects();
+    loadSchedule();
+    
+    // Add subject button functionality
+    document.getElementById('add-subject').addEventListener('click', addSubject);
+
+    // Add class button functionality
+    document.getElementById('add-class').addEventListener('click', addClass);
+
+    // Profile edit button functionality
+    document.getElementById('edit-profile').addEventListener('click', function () {
+        const username = document.getElementById('username');
+        username.removeAttribute('readonly');
+        username.focus();
+        username.addEventListener('blur', function () {
+            localStorage.setItem('profileName', username.value);
+        });
+    });
+});
+
+// Load subjects from localStorage and populate the subject folders
+function loadSubjects() {
+    const subjects = JSON.parse(localStorage.getItem('subjects')) || [];
+    const subjectFolder = document.getElementById('subject-folder');
+    subjectFolder.innerHTML = ''; // Clear the container before populating
+
+    subjects.forEach(subject => {
+        const folder = document.createElement('div');
+        folder.classList.add('folder');
+        folder.setAttribute('role', 'button');
+        folder.setAttribute('aria-label', 'Click to view subject: ' + subject);
+
+        const folderTitle = document.createElement('h3');
+        folderTitle.textContent = subject;
+        folder.appendChild(folderTitle);
+        
+        const folderContent = document.createElement('div');
+        folderContent.classList.add('folder-content');
+
+        // File upload input
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.addEventListener('change', handleFileUpload);
+
+        folderContent.appendChild(fileInput);
+        folder.appendChild(folderContent);
+        
+        folder.addEventListener('click', function() {
+            folderContent.style.display = folderContent.style.display === 'block' ? 'none' : 'block';
+        });
+
+        subjectFolder.appendChild(folder);
+    });
+}
+
+// Save subjects to localStorage
+function saveSubjects() {
+    const subjects = [];
+    const folders = document.querySelectorAll('.folder');
+    folders.forEach(folder => {
+        subjects.push(folder.querySelector('h3').textContent);
+    });
+    localStorage.setItem('subjects', JSON.stringify(subjects));
+}
+
+// Handle file upload for each subject
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        alert(`File ${file.name} uploaded successfully!`);
+        // Here you can store the file name or URL if needed, but for this case we are just alerting.
+    }
+}
+
+// Add a new subject dynamically
+function addSubject() {
+    const newSubject = prompt('Enter the new subject:');
+    if (newSubject) {
+        const subjectFolder = document.getElementById('subject-folder');
+        const newFolder = document.createElement('div');
+        newFolder.classList.add('folder');
+        newFolder.setAttribute('role', 'button');
+        newFolder.setAttribute('aria-label', 'Click to view subject: ' + newSubject);
+
+        const folderTitle = document.createElement('h3');
+        folderTitle.textContent = newSubject;
+        newFolder.appendChild(folderTitle);
+        
+        const folderContent = document.createElement('div');
+        folderContent.classList.add('folder-content');
+
+        // File upload input
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.addEventListener('change', handleFileUpload);
+
+        folderContent.appendChild(fileInput);
+        newFolder.appendChild(folderContent);
+        
+        newFolder.addEventListener('click', function() {
+            folderContent.style.display = folderContent.style.display === 'block' ? 'none' : 'block';
+        });
+
+        subjectFolder.appendChild(newFolder);
+        saveSubjects();
+    }
+}
+
+// Load schedule from localStorage
+function loadSchedule() {
+    const schedule = JSON.parse(localStorage.getItem('schedule')) || [];
+    const scheduleTable = document.getElementById('schedule-table');
+    scheduleTable.innerHTML = ''; // Clear the container before populating
+
+    schedule.forEach(rowData => {
+        const scheduleRow = document.createElement('div');
+        scheduleRow.classList.add('schedule-row');
+
+        rowData.forEach(cellData => {
+            const scheduleCell = document.createElement('div');
+            scheduleCell.classList.add('schedule-details');
+            scheduleCell.contentEditable = true;
+            scheduleCell.textContent = cellData;
+            scheduleCell.addEventListener('blur', saveSchedule);
+            scheduleRow.appendChild(scheduleCell);
+        });
+
+        scheduleTable.appendChild(scheduleRow);
+    });
+}
+
+// Save schedule to localStorage
+function saveSchedule() {
+    const schedule = [];
+    const scheduleRows = document.querySelectorAll('.schedule-row');
+    scheduleRows.forEach(row => {
+        const rowData = [];
+        const scheduleDetails = row.querySelectorAll('.schedule-details');
+        scheduleDetails.forEach(cell => {
+            rowData.push(cell.textContent);
+        });
+        schedule.push(rowData);
+    });
+    localStorage.setItem('schedule', JSON.stringify(schedule));
+}
+
+// Add a new class dynamically to the schedule
+function addClass() {
+    const newClass = prompt('Enter the new class name and time (e.g., Math 3:00 PM):');
+    if (newClass) {
+        const scheduleTable = document.getElementById('schedule-table');
+        const newRow = document.createElement('div');
+        newRow.classList.add('schedule-row');
+
+        const newScheduleTime = document.createElement('div');
+        newScheduleTime.classList.add('schedule-time');
+        newScheduleTime.contentEditable = true;
+        newScheduleTime.textContent = 'New Class';
+
+        const newScheduleDetails = document.createElement('div');
+        newScheduleDetails.classList.add('schedule-details');
+        newScheduleDetails.contentEditable = true;
+        newScheduleDetails.textContent = newClass;
+
+        newRow.appendChild(newScheduleTime);
+        newRow.appendChild(newScheduleDetails);
+        scheduleTable.appendChild(newRow);
+
+        newScheduleDetails.addEventListener('blur', saveSchedule);
+        saveSchedule();
+    }
+}
+
+// Performance Chart with Chart.js
+const ctx = document.getElementById('myChart').getContext('2d');
+const myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{
+            label: 'Grades',
+            data: [75, 80, 85, 90],  // Example data, replace with real data
+            borderColor: 'rgba(46, 204, 113, 1)',
+            backgroundColor: 'rgba(46, 204, 113, 0.2)',
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
