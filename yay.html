@@ -1,0 +1,1263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Interactive Cytogenetics Quiz — Lectures 1–15</title>
+  <style>
+    body { font-family: system-ui, Segoe UI, Roboto, Arial; margin: 18px; background: #f7fafc; }
+    .container { max-width: 980px; margin: 0 auto; background: white; padding: 18px; border-radius: 10px; box-shadow: 0 6px 24px rgba(2,6,23,0.08); }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .question { border: 1px solid #e6eef6; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+    .choices button { display: block; width: 100%; text-align: left; padding: 8px; margin: 6px 0; border-radius: 6px; border: 1px solid #dfe9f5; background: #fff; }
+    .choices button.correct { border-color: #2f9e44; background: rgba(47,158,68,0.08); }
+    .choices button.wrong { border-color: #e03131; background: rgba(224,49,49,0.06); }
+    .explain { font-size: 13px; padding: 8px; margin-top: 6px; background: #fbfbff; border-left: 4px solid #cfe3ff; border-radius: 6px; }
+    .lecture-badge { background: #eef2ff; padding: 4px 8px; border-radius: 999px; font-weight: 600; }
+    footer { margin-top: 12px; text-align: right; }
+    .small { font-size: 13px; color: #6b7280; }
+    .summary { padding: 10px; border-radius: 8px; background: #f1f5f9; margin-top: 8px; }
+    .btn { padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; }
+    .btn.primary { background: #2563eb; color: white; }
+    .btn.ghost { background: transparent; border: 1px solid #dbeafe; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Interactive Cytogenetics Quiz — Lectures 1–15</h1>
+    <div class="small">Assumptions: Lectures 1–12 → 15 questions each; Lectures 13–15 → 20 questions each.</div>
+
+    <div class="controls">
+      <select id="lectureSelect"></select>
+      <button class="btn primary" id="startBtn">Start / Show Questions</button>
+      <button class="btn" id="scoreBtn">Score</button>
+      <button class="btn ghost" id="resetBtn">Reset</button>
+      <button class="btn" id="exportBtn">Export answers (JSON)</button>
+    </div>
+
+    <div id="quizArea"></div>
+    <div class="summary" id="summary" style="display:none"></div>
+  </div>
+
+<script>
+const config = {
+  lectureCounts: { 1: 15, 2: 15, 3: 15, 4: 15, 5: 15, 6: 15, 7: 15, 8: 15, 9: 15, 10: 15, 11: 15, 12: 15, 13: 20, 14: 20, 15: 20 },
+  questions: {
+    "1": [
+          {"id": "1-1", "q": "What is the branch of biology that deals with the structure and function of chromosomes?", "choices": ["Cytogenetics", "Genomics", "Molecular Biology", "Genetics"], "ans": 0, "explain": "Cytogenetics is the study of chromosomes and their role in inheritance."},
+      {"id": "1-2", "q": "Who proposed the Germplasm Theory?", "choices": ["Gregor Mendel", "Charles Darwin", "August Weismann", "Louis Pasteur"], "ans": 2, "explain": "Weismann proposed that hereditary information is passed only through germ cells and not somatic cells."},
+      {"id": "1-3", "q": "Who is considered the 'Father of Modern Genetics'?", "choices": ["Gregor Mendel", "Louis Pasteur", "Charles Darwin", "Robert Hooke"], "ans": 0, "explain": "Gregor Mendel is known as the Father of Modern Genetics for his work on heredity using pea plants."},
+   {"id": "1-1", "q": "What is the process in prokaryotic cells where the DNA molecule is replicated and the original cell splits into two identical daughter cells?", "choices": ["Mitosis", "Meiosis", "Binary Fission", "Budding"], "ans": 2, "explain": "Binary fission is the process where prokaryotic cells replicate their single DNA molecule and divide into two identical daughter cells."},
+    {"id": "1-2", "q": "Which of the following organelles is absent in prokaryotic cells?", "choices": ["Nucleus", "Mitochondria", "Ribosomes", "Golgi apparatus"], "ans": 1, "explain": "Prokaryotic cells lack membrane-bound organelles like the mitochondria, unlike eukaryotic cells."},
+    {"id": "1-3", "q": "Which organelle in eukaryotic cells is responsible for generating ATP through cellular respiration?", "choices": ["Nucleus", "Mitochondria", "Ribosome", "Golgi apparatus"], "ans": 1, "explain": "The mitochondria are responsible for generating ATP, the cell's main energy source, through cellular respiration."},
+    {"id": "1-4", "q": "What is the term used for the protective structures at the ends of chromosomes that prevent them from deteriorating?", "choices": ["Telomeres", "Centromere", "Nucleosomes", "Chromatin"], "ans": 0, "explain": "Telomeres are specialized DNA-protein structures that protect the ends of chromosomes from deterioration or fusion with neighboring chromosomes."},
+    {"id": "1-5", "q": "What is the correct order of the stages in the cell cycle?", "choices": ["G1, S, G2, M", "S, G2, G1, M", "M, G1, S, G2", "G1, M, S, G2"], "ans": 0, "explain": "The correct order of the stages in the cell cycle is G1 (growth), S (DNA synthesis), G2 (preparation for division), and M (mitosis)." },
+    {"id": "1-6", "q": "Which stage of the cell cycle is when the cell grows and prepares for DNA replication?", "choices": ["G1 phase", "S phase", "G2 phase", "M phase"], "ans": 0, "explain": "The G1 phase is when the cell grows and prepares for DNA replication in the S phase."},
+    {"id": "1-7", "q": "What is the major difference between prokaryotic and eukaryotic cell reproduction?", "choices": ["Eukaryotic cells use binary fission, while prokaryotic cells use mitosis.", "Prokaryotic cells lack DNA replication.", "Eukaryotic cells use mitosis, while prokaryotic cells use binary fission.", "Eukaryotic cells do not undergo any form of replication."], "ans": 2, "explain": "Eukaryotic cells reproduce through mitosis, while prokaryotic cells reproduce by binary fission, a simpler process."},
+    {"id": "1-8", "q": "What is the role of the kinetochore in cell division?", "choices": ["It attaches the chromosome to the nuclear membrane.", "It helps the chromosomes condense.", "It attaches chromosomes to spindle fibers during cell division.", "It helps form the nucleolus."], "ans": 2, "explain": "The kinetochore is a protein complex located at the centromere of chromosomes, where spindle fibers attach during cell division to pull chromosomes apart."},
+    {"id": "1-9", "q": "During which stage of mitosis do sister chromatids separate?", "choices": ["Prophase", "Metaphase", "Anaphase", "Telophase"], "ans": 2, "explain": "In anaphase, the centromere splits, and the sister chromatids are pulled toward opposite poles of the cell."},
+    {"id": "1-10", "q": "What is the process called where homologous chromosomes exchange genetic material during meiosis?", "choices": ["Synapsis", "Crossing over", "Transcription", "Translation"], "ans": 1, "explain": "Crossing over occurs during prophase I of meiosis, where homologous chromosomes exchange genetic material, increasing genetic diversity."},
+   {"id": "1-16", "q": "Which of the following is a characteristic of eukaryotic cells?", "choices": ["Lack of nucleus", "Presence of membrane-bound organelles", "DNA is circular", "Smaller size compared to prokaryotic cells"], "ans": 1, "explain": "Eukaryotic cells have a defined nucleus and membrane-bound organelles, unlike prokaryotic cells."},
+    {"id": "1-17", "q": "What structure is responsible for the synthesis of proteins in a cell?", "choices": ["Nucleus", "Endoplasmic Reticulum", "Ribosomes", "Golgi Apparatus"], "ans": 2, "explain": "Ribosomes are responsible for protein synthesis in both prokaryotic and eukaryotic cells."},
+    {"id": "1-18", "q": "What is the role of the Golgi apparatus?", "choices": ["Protein synthesis", "DNA replication", "Packaging and modifying proteins", "Transporting molecules across the cell membrane"], "ans": 2, "explain": "The Golgi apparatus modifies, sorts, and packages proteins for secretion or delivery to other organelles."},
+    {"id": "1-19", "q": "What is the function of the mitochondria?", "choices": ["Protein synthesis", "Cell division", "ATP production", "Genetic storage"], "ans": 2, "explain": "Mitochondria are the powerhouses of the cell, producing ATP, which provides energy for cellular functions."},
+    {"id": "1-20", "q": "Which of the following is the function of the cell membrane?", "choices": ["Storage of genetic material", "Protein synthesis", "Regulation of substances entering and leaving the cell", "Production of ribosomes"], "ans": 2, "explain": "The cell membrane regulates the movement of substances into and out of the cell, providing structure and support."},
+    {"id": "1-21", "q": "What is the role of chloroplasts in plant cells?", "choices": ["Protein synthesis", "Cell division", "Photosynthesis", "Respiration"], "ans": 2, "explain": "Chloroplasts are responsible for photosynthesis in plant cells, converting sunlight into chemical energy."},
+    {"id": "1-22", "q": "What is a characteristic of prokaryotic cells?", "choices": ["Presence of a nucleus", "Lack of membrane-bound organelles", "Multicellular", "Complex structure"], "ans": 1, "explain": "Prokaryotic cells lack membrane-bound organelles and a defined nucleus, distinguishing them from eukaryotic cells."},
+    {"id": "1-23", "q": "What is the primary purpose of mitosis?", "choices": ["Growth and repair", "Sexual reproduction", "Genetic variation", "Formation of gametes"], "ans": 0, "explain": "Mitosis is a process of cell division that results in two identical daughter cells, important for growth and repair."},
+    {"id": "1-24", "q": "What happens during anaphase of mitosis?", "choices": ["Chromosomes condense", "Chromosomes align at the cell's equator", "Sister chromatids are pulled apart", "Nuclear envelope forms"], "ans": 2, "explain": "During anaphase, the sister chromatids are separated and pulled toward opposite poles of the cell."},
+    {"id": "1-25", "q": "Which of the following structures is NOT found in both plant and animal cells?", "choices": ["Nucleus", "Mitochondria", "Chloroplasts", "Cell membrane"], "ans": 2, "explain": "Chloroplasts are only found in plant cells and some protists; animal cells do not contain chloroplasts."},
+    {"id": "1-26", "q": "What is the function of the lysosomes in a cell?", "choices": ["Protein synthesis", "Breaking down waste materials", "Energy production", "DNA replication"], "ans": 1, "explain": "Lysosomes contain enzymes that break down waste materials, cellular debris, and foreign invaders."},
+    {"id": "1-27", "q": "What is the function of the nucleolus?", "choices": ["Protein synthesis", "Ribosome assembly", "DNA replication", "Packaging of proteins"], "ans": 1, "explain": "The nucleolus is responsible for the assembly of ribosomal RNA and the formation of ribosome subunits."},
+    {"id": "1-28", "q": "Which organelle is involved in the detoxification of harmful substances?", "choices": ["Endoplasmic Reticulum", "Golgi Apparatus", "Lysosome", "Peroxisome"], "ans": 3, "explain": "Peroxisomes contain enzymes that break down fatty acids and detoxify harmful substances, including hydrogen peroxide."},
+    {"id": "1-29", "q": "What is the function of the rough endoplasmic reticulum?", "choices": ["Protein synthesis and modification", "Lipid production", "Cell division", "Transport of molecules"], "ans": 0, "explain": "The rough endoplasmic reticulum is involved in the synthesis and modification of proteins, particularly those destined for secretion."},
+    {"id": "1-30", "q": "What is the role of the smooth endoplasmic reticulum?", "choices": ["Synthesis of proteins", "Detoxification and lipid synthesis", "Storage of genetic material", "Cellular respiration"], "ans": 1, "explain": "The smooth endoplasmic reticulum is involved in lipid synthesis, detoxification of drugs and poisons, and calcium ion storage."},
+    {"id": "1-31", "q": "What is the primary function of centrioles?", "choices": ["DNA replication", "Cell division", "Protein synthesis", "Energy production"], "ans": 1, "explain": "Centrioles play a crucial role in organizing microtubules during cell division, particularly in the formation of the mitotic spindle."},
+    {"id": "1-32", "q": "What is the function of ribosomal RNA (rRNA)?", "choices": ["Forms ribosomes", "Transports amino acids", "Synthesizes proteins", "Carries genetic information"], "ans": 0, "explain": "rRNA is a key component of ribosomes, where it helps in the translation of mRNA into proteins."},
+    {"id": "1-33", "q": "Which structure is responsible for the secretion of proteins from the cell?", "choices": ["Nucleus", "Golgi apparatus", "Endoplasmic reticulum", "Plasma membrane"], "ans": 1, "explain": "The Golgi apparatus modifies, sorts, and packages proteins for secretion out of the cell or delivery to other organelles."},
+    {"id": "1-34", "q": "Which of the following is a characteristic of plant cells but not animal cells?", "choices": ["Cell membrane", "Nucleus", "Chloroplasts", "Mitochondria"], "ans": 2, "explain": "Chloroplasts are found only in plant cells, where they are involved in photosynthesis."},
+    {"id": "1-35", "q": "What is the role of the cytoskeleton?", "choices": ["Protein synthesis", "DNA replication", "Structure, support, and movement", "Regulation of cell division"], "ans": 2, "explain": "The cytoskeleton provides structural support to the cell, enables cell movement, and assists in intracellular transport and cell division."} ],
+    2: [
+        {"id": "2-1", "q": "What is the basic structure of DNA?", "choices": ["Double helix", "Triple helix", "Single strand", "Circular shape"], "ans": 0, "explain": "DNA is structured as a double helix, with two strands wound around each other."},
+    {"id": "2-2", "q": "Which nitrogenous base pairs with adenine in DNA?", "choices": ["Thymine", "Cytosine", "Guanine", "Uracil"], "ans": 0, "explain": "Adenine pairs with thymine in DNA through two hydrogen bonds."},
+    {"id": "2-3", "q": "Which molecule is responsible for carrying genetic information in a cell?", "choices": ["DNA", "RNA", "Protein", "Carbohydrates"], "ans": 0, "explain": "DNA carries the genetic instructions for the development, functioning, and reproduction of all living organisms."},
+    {"id": "2-4", "q": "What enzyme is involved in the process of DNA replication?", "choices": ["DNA polymerase", "RNA polymerase", "Helicase", "Ligase"], "ans": 0, "explain": "DNA polymerase is the enzyme that adds nucleotides to the growing DNA strand during replication."},
+    {"id": "2-5", "q": "What is the difference between DNA and RNA?", "choices": ["RNA contains uracil, while DNA contains thymine", "RNA is double-stranded, while DNA is single-stranded", "DNA is found in the nucleus, while RNA is found in the cytoplasm", "RNA has a deoxyribose sugar, while DNA has ribose sugar"], "ans": 0, "explain": "RNA contains uracil in place of thymine, and RNA is usually single-stranded, while DNA is double-stranded."},
+    {"id": "2-6", "q": "Which type of RNA carries genetic information from the nucleus to the ribosomes?", "choices": ["mRNA", "tRNA", "rRNA", "snRNA"], "ans": 0, "explain": "mRNA carries the genetic information transcribed from DNA to the ribosomes for protein synthesis."},
+    {"id": "2-7", "q": "What is the function of tRNA in protein synthesis?", "choices": ["Translates mRNA", "Carries amino acids to ribosomes", "Forms ribosomes", "Synthesizes proteins"], "ans": 1, "explain": "tRNA transports amino acids to the ribosome, where they are added to the growing protein chain."},
+    {"id": "2-8", "q": "What is the main function of rRNA?", "choices": ["To carry genetic information", "To synthesize proteins", "To form ribosomes", "To transport amino acids"], "ans": 2, "explain": "rRNA forms part of the ribosome structure and is essential for protein synthesis."},
+    {"id": "2-9", "q": "Which process involves the copying of DNA into RNA?", "choices": ["Transcription", "Translation", "Replication", "Mitosis"], "ans": 0, "explain": "Transcription is the process of copying DNA into RNA."},
+    {"id": "2-10", "q": "What does the process of translation produce?", "choices": ["RNA", "Proteins", "DNA", "Enzymes"], "ans": 1, "explain": "Translation produces proteins by decoding the mRNA sequence into a chain of amino acids."},
+    {"id": "2-11", "q": "What is a codon?", "choices": ["A sequence of three nucleotides that codes for an amino acid", "A type of RNA", "A type of protein", "A section of DNA"], "ans": 0, "explain": "A codon is a sequence of three nucleotides in mRNA that codes for a specific amino acid."},
+    {"id": "2-12", "q": "What is the purpose of the ribosome in translation?", "choices": ["To produce mRNA", "To synthesize amino acids", "To decode mRNA into a protein", "To repair DNA"], "ans": 2, "explain": "The ribosome decodes the mRNA sequence and assembles the amino acids into a protein."},
+    {"id": "2-13", "q": "What role does RNA polymerase play in transcription?", "choices": ["It synthesizes RNA from a DNA template", "It unwinds DNA", "It synthesizes proteins", "It cuts RNA"], "ans": 0, "explain": "RNA polymerase synthesizes RNA by using DNA as a template during transcription."},
+    {"id": "2-14", "q": "What is the role of the promoter region in DNA?", "choices": ["It signals the start of transcription", "It adds nucleotides during replication", "It carries amino acids during translation", "It terminates transcription"], "ans": 0, "explain": "The promoter region signals the start of transcription, allowing RNA polymerase to bind to DNA."},
+    {"id": "2-15", "q": "What happens during DNA replication?", "choices": ["DNA is copied to produce two identical DNA molecules", "RNA is transcribed into proteins", "Proteins are synthesized", "RNA is copied into mRNA"], "ans": 0, "explain": "During DNA replication, DNA is copied to produce two identical DNA molecules."},
+    {"id": "2-16", "q": "What is the primary function of RNA in protein synthesis?", "choices": ["Store genetic information", "Carry genetic instructions from the nucleus to the ribosome", "Synthesize proteins", "Maintain the structure of chromosomes"], "ans": 1, "explain": "RNA, specifically mRNA, carries the genetic instructions from the DNA in the nucleus to the ribosome for protein synthesis."},
+    {"id": "2-17", "q": "Which molecule is the template used during RNA transcription?", "choices": ["mRNA", "DNA", "tRNA", "Ribosomes"], "ans": 1, "explain": "During transcription, DNA serves as the template for the synthesis of mRNA."},
+    {"id": "2-18", "q": "What is the role of the promoter in the process of transcription?", "choices": ["To terminate transcription", "To initiate the binding of RNA polymerase", "To synthesize mRNA", "To synthesize amino acids"], "ans": 1, "explain": "The promoter region in DNA signals the beginning of transcription and allows RNA polymerase to bind."},
+    {"id": "2-19", "q": "Which of the following processes occurs first during protein synthesis?", "choices": ["Translation", "Replication", "Transcription", "Splicing"], "ans": 2, "explain": "Transcription occurs first, where mRNA is synthesized from a DNA template, before translation begins to make proteins."},
+    {"id": "2-20", "q": "What does the process of translation result in?", "choices": ["RNA replication", "DNA replication", "Protein synthesis", "Chromosome segregation"], "ans": 2, "explain": "Translation decodes mRNA into a chain of amino acids, forming proteins."},
+    {"id": "2-21", "q": "What is the function of ribosomal RNA (rRNA) in protein synthesis?", "choices": ["Carry amino acids to the ribosome", "Synthesize proteins directly", "Catalyze the assembly of amino acids into proteins", "Regulate gene expression"], "ans": 2, "explain": "rRNA forms part of the ribosome's structure and helps catalyze the assembly of amino acids into proteins."},
+    {"id": "2-22", "q": "Which of the following molecules is responsible for bringing amino acids to the ribosome during translation?", "choices": ["mRNA", "rRNA", "tRNA", "DNA"], "ans": 2, "explain": "tRNA molecules transport amino acids to the ribosome, where they are incorporated into the growing protein chain."},
+    {"id": "2-23", "q": "In the process of transcription, what is synthesized from a DNA template?", "choices": ["Proteins", "DNA", "mRNA", "Amino acids"], "ans": 2, "explain": "mRNA is synthesized from a DNA template during the process of transcription."},
+    {"id": "2-24", "q": "What does a codon in mRNA specify?", "choices": ["A specific nucleotide sequence", "A sequence of amino acids", "A part of a ribosome", "A sequence of RNA molecules"], "ans": 1, "explain": "A codon is a sequence of three nucleotides in mRNA that codes for a specific amino acid in the protein."},
+    {"id": "2-25", "q": "Which enzyme is responsible for unwinding DNA during transcription?", "choices": ["RNA polymerase", "Helicase", "Ligase", "DNA polymerase"], "ans": 1, "explain": "Helicase unwinds the DNA double helix, allowing RNA polymerase to transcribe the gene into mRNA."},
+    {"id": "2-26", "q": "What is the role of the ribosome in translation?", "choices": ["To replicate DNA", "To bind RNA to the promoter region", "To decode mRNA and assemble proteins", "To synthesize RNA from DNA"], "ans": 2, "explain": "The ribosome decodes the mRNA and assembles amino acids into a protein chain."},
+    {"id": "2-27", "q": "Which of the following is true about mRNA?", "choices": ["It carries the amino acid sequence to the ribosome", "It carries genetic information from the ribosome to the nucleus", "It is translated into protein at the ribosome", "It remains in the nucleus for storage"], "ans": 2, "explain": "mRNA carries the genetic code from the DNA to the ribosome, where it is translated into a protein."},
+    {"id": "2-28", "q": "During which step of translation are amino acids joined together to form a polypeptide?", "choices": ["Elongation", "Termination", "Initiation", "Splicing"], "ans": 0, "explain": "During elongation, amino acids are joined together by peptide bonds to form a polypeptide chain."},
+    {"id": "2-29", "q": "What happens during the elongation phase of translation?", "choices": ["The ribosome binds to the mRNA", "The tRNA carries amino acids to the ribosome", "The polypeptide chain grows as amino acids are added", "The ribosome disassembles"], "ans": 2, "explain": "During elongation, the ribosome adds amino acids to the growing polypeptide chain, which eventually forms a complete protein."},
+    {"id": "2-30", "q": "Which of the following is involved in RNA splicing?", "choices": ["Ribosome", "RNA polymerase", "Spliceosome", "DNA polymerase"], "ans": 2, "explain": "The spliceosome is responsible for removing introns and joining exons to produce mature mRNA."},
+    ],
+  "3": [
+    {"id": "3-1", "q": "What does the Central Dogma of molecular biology describe?", "choices": ["DNA → RNA → Protein", "RNA → DNA → Protein", "Protein → RNA → DNA", "DNA → Protein → RNA"], "ans": 0, "explain": "The Central Dogma explains the flow of genetic information in cells from DNA to RNA to Protein."},
+    {"id": "3-2", "q": "What is the process by which mRNA is synthesized from a DNA template?", "choices": ["Replication", "Transcription", "Translation", "Splicing"], "ans": 1, "explain": "Transcription is the process of making RNA from a DNA template."},
+    {"id": "3-3", "q": "Which enzyme is responsible for synthesizing mRNA?", "choices": ["DNA polymerase", "RNA polymerase", "Ligase", "Helicase"], "ans": 1, "explain": "RNA polymerase synthesizes RNA from a DNA template during transcription."},
+    {"id": "3-4", "q": "Where does translation occur in the cell?", "choices": ["Nucleus", "Cytoplasm", "Mitochondria", "Endoplasmic Reticulum"], "ans": 1, "explain": "Translation occurs in the cytoplasm, where ribosomes synthesize proteins from mRNA."},
+    {"id": "3-5", "q": "What is the role of ribosomal RNA (rRNA) in translation?", "choices": ["Carries amino acids to ribosomes", "Serves as a template for protein synthesis", "Forms part of the ribosome structure", "Decodes mRNA"], "ans": 2, "explain": "rRNA forms the core of the ribosome and catalyzes protein synthesis."},
+    {"id": "3-6", "q": "What is the function of transfer RNA (tRNA) during translation?", "choices": ["Synthesizes RNA", "Carries amino acids to the ribosome", "Forms proteins", "Transcribes DNA"], "ans": 1, "explain": "tRNA transports amino acids to the ribosome to be incorporated into proteins during translation."},
+    {"id": "3-7", "q": "Which process results in the creation of mRNA from a DNA template?", "choices": ["Replication", "Transcription", "Translation", "Splicing"], "ans": 1, "explain": "Transcription is the process by which mRNA is synthesized using a DNA template."},
+    {"id": "3-8", "q": "Which molecule is responsible for carrying the genetic code from the nucleus to the ribosome?", "choices": ["DNA", "mRNA", "tRNA", "rRNA"], "ans": 1, "explain": "mRNA carries the genetic information from the nucleus to the ribosomes for protein synthesis."},
+    {"id": "3-9", "q": "Which of the following is involved in translating mRNA into a protein?", "choices": ["DNA polymerase", "RNA polymerase", "Ribosome", "Ligase"], "ans": 2, "explain": "The ribosome is responsible for translating mRNA into a protein by assembling amino acids."},
+    {"id": "3-10", "q": "What is the start codon in mRNA?", "choices": ["AUG", "UAA", "UAG", "UGA"], "ans": 0, "explain": "The start codon is AUG, which signals the beginning of translation and codes for methionine."},
+    {"id": "3-11", "q": "What happens during RNA splicing?", "choices": ["Exons are removed", "Introns are removed", "Both exons and introns are spliced", "None of the above"], "ans": 1, "explain": "RNA splicing removes introns (non-coding regions) and joins exons (coding regions) together to form mature mRNA."},
+    {"id": "3-12", "q": "What is the role of a codon?", "choices": ["To bind tRNA", "To code for an amino acid", "To catalyze protein synthesis", "To transcribe RNA"], "ans": 1, "explain": "A codon is a sequence of three nucleotides in mRNA that codes for a specific amino acid."},
+    {"id": "3-13", "q": "What is the purpose of the promoter region in DNA?", "choices": ["It signals the start of transcription", "It adds nucleotides during replication", "It carries amino acids during translation", "It terminates transcription"], "ans": 0, "explain": "The promoter region of DNA signals the start of transcription and guides RNA polymerase to begin RNA synthesis."},
+    {"id": "3-14", "q": "What is the function of the poly-A tail in mRNA?", "choices": ["To protect the mRNA from degradation", "To signal the start of translation", "To bind to ribosomes", "To provide a template for transcription"], "ans": 0, "explain": "The poly-A tail protects mRNA from degradation and assists in its export from the nucleus."},
+    {"id": "3-15", "q": "Which of the following is not a component of translation?", "choices": ["Ribosomes", "tRNA", "mRNA", "DNA"], "ans": 3, "explain": "DNA is not involved in translation; translation involves ribosomes, tRNA, and mRNA."},
+    {"id": "3-1", "q": "What is the function of RNA polymerase during transcription?", "choices": ["It synthesizes mRNA from a DNA template", "It unwinds the DNA double helix", "It assembles amino acids into proteins", "It removes introns from mRNA"], "ans": 0, "explain": "RNA polymerase is responsible for synthesizing mRNA from a DNA template during transcription."},
+    {"id": "3-2", "q": "What is the purpose of the 5' cap on mRNA?", "choices": ["To protect mRNA from degradation", "To signal the start of translation", "To attach to the ribosome", "To help the mRNA bind to DNA"], "ans": 0, "explain": "The 5' cap protects mRNA from degradation and aids in the attachment to the ribosome during translation."},
+    {"id": "3-3", "q": "What happens during RNA splicing?", "choices": ["Exons are removed and introns are joined", "Introns are removed and exons are joined", "Both exons and introns are removed", "Exons and introns are replicated"], "ans": 1, "explain": "During RNA splicing, introns are removed, and exons are joined together to form a mature mRNA molecule."},
+    {"id": "3-4", "q": "What does the process of translation produce?", "choices": ["DNA", "RNA", "Proteins", "Lipids"], "ans": 2, "explain": "Translation decodes mRNA into a chain of amino acids, forming a protein."},
+    {"id": "3-5", "q": "Where does translation occur in the cell?", "choices": ["Nucleus", "Mitochondria", "Ribosome", "Endoplasmic Reticulum"], "ans": 2, "explain": "Translation occurs at the ribosomes, where mRNA is translated into a protein."},
+    {"id": "3-6", "q": "What is the role of transfer RNA (tRNA) during translation?", "choices": ["It carries amino acids to the ribosome", "It transcribes mRNA into proteins", "It forms part of the ribosome structure", "It binds to the promoter region of DNA"], "ans": 0, "explain": "tRNA carries amino acids to the ribosome, where they are added to the growing protein chain."},
+    {"id": "3-7", "q": "Which molecule serves as the template for protein synthesis?", "choices": ["DNA", "mRNA", "tRNA", "rRNA"], "ans": 1, "explain": "mRNA serves as the template for protein synthesis during translation."},
+    {"id": "3-8", "q": "What is the role of ribosomal RNA (rRNA) in translation?", "choices": ["To carry amino acids to the ribosome", "To synthesize proteins", "To form part of the ribosome structure", "To decode mRNA"], "ans": 2, "explain": "rRNA forms part of the ribosome and plays a key role in protein synthesis."},
+    {"id": "3-9", "q": "Which of the following codons is the start codon in mRNA?", "choices": ["AUG", "UAG", "UGA", "UAA"], "ans": 0, "explain": "The start codon is AUG, which signals the beginning of translation and codes for methionine."},
+    {"id": "3-10", "q": "Which enzyme is responsible for adding nucleotides to the growing mRNA strand during transcription?", "choices": ["RNA polymerase", "DNA polymerase", "Helicase", "Ligase"], "ans": 0, "explain": "RNA polymerase adds nucleotides to the growing mRNA strand during transcription."},
+    {"id": "3-11", "q": "What is the function of the poly-A tail in mRNA?", "choices": ["To protect the mRNA from degradation", "To signal the start of translation", "To bind to ribosomes", "To provide a template for transcription"], "ans": 0, "explain": "The poly-A tail protects mRNA from degradation and helps with its export from the nucleus."},
+    {"id": "3-12", "q": "What is the role of the promoter region in transcription?", "choices": ["It signals the start of translation", "It helps unwind DNA", "It signals the start of transcription", "It synthesizes proteins"], "ans": 2, "explain": "The promoter region signals the start of transcription by guiding RNA polymerase to bind to the DNA."},
+    {"id": "3-13", "q": "What happens when a ribosome reaches a stop codon during translation?", "choices": ["It adds another amino acid", "It starts a new translation cycle", "It stops protein synthesis", "It degrades the mRNA"], "ans": 2, "explain": "When the ribosome reaches a stop codon, protein synthesis stops, and the polypeptide is released."},
+    {"id": "3-14", "q": "Which process results in the synthesis of RNA from a DNA template?", "choices": ["Transcription", "Translation", "Replication", "Splicing"], "ans": 0, "explain": "Transcription is the process where RNA is synthesized from a DNA template."},
+    {"id": "3-15", "q": "Which molecule carries the genetic code from the DNA in the nucleus to the ribosome?", "choices": ["mRNA", "tRNA", "rRNA", "DNA"], "ans": 0, "explain": "mRNA carries the genetic information from the DNA to the ribosome, where it is translated into a protein."},
+],
+ "4": [
+    {"id": "4-1", "q": "What is the main purpose of mitosis?", "choices": ["Growth and repair", "Sexual reproduction", "Genetic recombination", "Gene editing"], "ans": 0, "explain": "Mitosis is responsible for growth, repair, and asexual reproduction by producing genetically identical cells."},
+    {"id": "4-2", "q": "How many daughter cells are produced in mitosis?", "choices": ["1", "2", "4", "8"], "ans": 1, "explain": "Mitosis results in two genetically identical daughter cells."},
+    {"id": "4-3", "q": "What is the correct sequence of phases in mitosis?", "choices": ["Prophase, Metaphase, Anaphase, Telophase", "Metaphase, Prophase, Telophase, Anaphase", "Anaphase, Metaphase, Telophase, Prophase", "Telophase, Prophase, Metaphase, Anaphase"], "ans": 0, "explain": "The correct order is Prophase, Metaphase, Anaphase, and Telophase."},
+    {"id": "4-4", "q": "In which phase of mitosis do chromosomes align at the equatorial plate?", "choices": ["Prophase", "Metaphase", "Anaphase", "Telophase"], "ans": 1, "explain": "During metaphase, chromosomes align at the equatorial plate of the cell."},
+    {"id": "4-5", "q": "Which process reduces chromosome number by half and is involved in gamete formation?", "choices": ["Mitosis", "Meiosis", "Binary fission", "Budding"], "ans": 1, "explain": "Meiosis reduces chromosome number by half and is essential for gamete formation."},
+    {"id": "4-6", "q": "What is crossing over in meiosis?", "choices": ["Exchange of genetic material between homologous chromosomes", "Separation of sister chromatids", "Replication of DNA", "Fusion of gametes"], "ans": 0, "explain": "Crossing over is the exchange of genetic material between homologous chromosomes, increasing genetic variation."},
+    {"id": "4-7", "q": "During which phase of meiosis do homologous chromosomes separate?", "choices": ["Anaphase I", "Anaphase II", "Metaphase I", "Telophase II"], "ans": 0, "explain": "During Anaphase I of meiosis, homologous chromosomes separate and move to opposite poles."},
+    {"id": "4-8", "q": "What is the final outcome of meiosis?", "choices": ["Two diploid cells", "Four haploid cells", "Two haploid cells", "One diploid cell"], "ans": 1, "explain": "Meiosis results in four haploid cells, which are the gametes (sperm or egg cells)."},
+    {"id": "4-9", "q": "Which stage of meiosis is similar to mitosis?", "choices": ["Meiosis I", "Meiosis II", "Both", "Neither"], "ans": 1, "explain": "Meiosis II is similar to mitosis because it involves the separation of sister chromatids."},
+    {"id": "4-10", "q": "What happens during prophase of meiosis I?", "choices": ["Chromosomes condense and homologous chromosomes pair up", "Chromosomes align at the equatorial plate", "Sister chromatids separate", "Spindle fibers form"], "ans": 0, "explain": "During prophase I of meiosis, chromosomes condense, and homologous chromosomes pair up in a process called synapsis."},
+    {"id": "4-11", "q": "What is the main difference between mitosis and meiosis?", "choices": ["Mitosis results in diploid cells, meiosis results in haploid cells", "Mitosis has two rounds of division, meiosis has one", "Meiosis produces identical cells, mitosis produces genetically different cells", "Mitosis occurs in germ cells, meiosis occurs in somatic cells"], "ans": 0, "explain": "Mitosis results in two diploid cells, while meiosis results in four haploid cells with half the chromosome number."},
+    {"id": "4-12", "q": "What is the role of the centromere during cell division?", "choices": ["To hold the sister chromatids together", "To form the spindle apparatus", "To separate the chromosomes", "To synthesize proteins"], "ans": 0, "explain": "The centromere holds the sister chromatids together during cell division until they are separated in anaphase."},
+    {"id": "4-13", "q": "What is a haploid cell?", "choices": ["A cell with two sets of chromosomes", "A cell with one set of chromosomes", "A cell undergoing mitosis", "A gamete with no chromosomes"], "ans": 1, "explain": "A haploid cell contains one set of chromosomes, which is typical of gametes (sperm or egg cells)."},
+    {"id": "4-14", "q": "What is synapsis?", "choices": ["The pairing of homologous chromosomes during prophase I", "The separation of sister chromatids during anaphase", "The alignment of chromosomes during metaphase", "The fusion of gametes"], "ans": 0, "explain": "Synapsis is the process in which homologous chromosomes pair up during prophase I of meiosis."},
+    {"id": "4-15", "q": "What is the difference between anaphase I and anaphase II of meiosis?", "choices": ["Homologous chromosomes separate in anaphase I, while sister chromatids separate in anaphase II", "Homologous chromosomes separate in anaphase II, while sister chromatids separate in anaphase I", "Anaphase I involves no chromosome movement", "There is no anaphase II"], "ans": 0, "explain": "In anaphase I, homologous chromosomes separate; in anaphase II, sister chromatids separate."}, 
+    {"id": "4-16", "q": "What is the primary function of mitosis?", "choices": ["Asexual reproduction", "Genetic recombination", "Sexual reproduction", "Gene editing"], "ans": 0, "explain": "Mitosis is responsible for asexual reproduction and the creation of genetically identical cells for growth, repair, and replacement."},
+    {"id": "4-17", "q": "What type of cells are produced by meiosis?", "choices": ["Diploid cells", "Haploid cells", "Somatic cells", "Gametes"], "ans": 1, "explain": "Meiosis produces haploid cells, which are essential for sexual reproduction (e.g., sperm and egg cells)."},
+    {"id": "4-18", "q": "Which phase of mitosis involves the alignment of chromosomes along the equatorial plate?", "choices": ["Prophase", "Metaphase", "Anaphase", "Telophase"], "ans": 1, "explain": "In Metaphase, chromosomes align at the metaphase plate in preparation for separation."},
+    {"id": "4-19", "q": "How many rounds of cell division occur during meiosis?", "choices": ["One", "Two", "Three", "Four"], "ans": 1, "explain": "Meiosis involves two rounds of cell division: Meiosis I and Meiosis II, resulting in four haploid cells."},
+    {"id": "4-20", "q": "What is the result of crossing over during meiosis?", "choices": ["Increases genetic diversity", "Decreases chromosome number", "Ensures equal DNA distribution", "Produces identical cells"], "ans": 0, "explain": "Crossing over increases genetic diversity by exchanging genetic material between homologous chromosomes."},
+    {"id": "4-21", "q": "What happens during metaphase I of meiosis?", "choices": ["Homologous chromosomes are separated", "Chromosomes condense", "Chromosomes align along the equatorial plate", "Spindle fibers form"], "ans": 2, "explain": "During Metaphase I, homologous chromosomes align at the metaphase plate in preparation for separation."},
+    {"id": "4-22", "q": "What is the function of the centromere during cell division?", "choices": ["Holds sister chromatids together", "Facilitates the fusion of gametes", "Synthesizes RNA", "Assists in chromosome segregation"], "ans": 0, "explain": "The centromere holds sister chromatids together during cell division and plays a role in their segregation during anaphase."},
+    {"id": "4-23", "q": "What is the key difference between meiosis and mitosis?", "choices": ["Mitosis results in haploid cells, while meiosis results in diploid cells", "Mitosis involves genetic recombination, while meiosis does not", "Mitosis occurs in somatic cells, while meiosis occurs in germ cells", "Mitosis produces four cells, while meiosis produces two"], "ans": 2, "explain": "Mitosis occurs in somatic cells, while meiosis occurs in germ cells and reduces chromosome number by half to form gametes."},
+    {"id": "4-24", "q": "What is the role of the spindle fibers in cell division?", "choices": ["To hold chromosomes together", "To replicate DNA", "To separate chromosomes during mitosis", "To create new cells"], "ans": 2, "explain": "Spindle fibers are essential for separating chromosomes during mitosis and meiosis, ensuring proper distribution of genetic material."},
+    {"id": "4-25", "q": "During which phase of meiosis do homologous chromosomes pair up?", "choices": ["Prophase I", "Metaphase II", "Anaphase I", "Telophase I"], "ans": 0, "explain": "In Prophase I of meiosis, homologous chromosomes pair up and undergo crossing over, leading to genetic recombination."},
+    {"id": "4-26", "q": "What is the final product of meiosis?", "choices": ["Two diploid cells", "Two haploid cells", "Four diploid cells", "Four haploid cells"], "ans": 3, "explain": "Meiosis results in four haploid cells, each containing half the chromosome number of the original cell."},
+    {"id": "4-27", "q": "What is synapsis during meiosis?", "choices": ["The separation of homologous chromosomes", "The alignment of chromosomes along the equatorial plate", "The pairing of homologous chromosomes", "The formation of a spindle apparatus"], "ans": 2, "explain": "Synapsis is the process during Prophase I of meiosis where homologous chromosomes pair up, enabling genetic recombination."},
+    {"id": "4-28", "q": "Which phase of meiosis is similar to mitosis?", "choices": ["Meiosis I", "Meiosis II", "Both", "Neither"], "ans": 1, "explain": "Meiosis II is similar to mitosis because it involves the separation of sister chromatids, producing four haploid cells."},
+    {"id": "4-29", "q": "What happens during anaphase II of meiosis?", "choices": ["Homologous chromosomes are separated", "Sister chromatids are separated", "Chromosomes condense", "Crossing over occurs"], "ans": 1, "explain": "During Anaphase II of meiosis, sister chromatids are separated and move toward opposite poles of the cell."},
+    {"id": "4-30", "q": "What is the difference between anaphase I and anaphase II of meiosis?", "choices": ["Homologous chromosomes separate in anaphase I, while sister chromatids separate in anaphase II", "Homologous chromosomes separate in anaphase II, while sister chromatids separate in anaphase I", "Anaphase I involves no chromosome movement", "There is no anaphase II"], "ans": 0, "explain": "In Anaphase I, homologous chromosomes separate, while in Anaphase II, sister chromatids separate."} ],
+
+    
+    5: [
+      {id: '5-1', q: 'What is a gene?', choices: ['A segment of DNA that codes for a protein', 'A unit of heredity', 'A form of genetic mutation', 'A type of RNA'], ans: 0, explain: 'A gene is a segment of DNA that contains instructions to make proteins or RNA.'},
+      {id: '5-2', q: 'What is the function of chromosomes?', choices: ['To store genetic material', 'To replicate DNA', 'To synthesize proteins', 'To produce energy'], ans: 0, explain: 'Chromosomes store and carry genetic material in the form of DNA.'},
+      {id: '5-3', q: 'What is a karyotype?', choices: ['The full set of an organism’s chromosomes', 'A gene map', 'A sequence of DNA mutations', 'A type of protein'], ans: 0, explain: 'A karyotype is an image or diagram showing an organism’s chromosomes, arranged in pairs.'},
+      {id: '5-4', q: 'How many chromosomes are typically present in a human somatic cell?', choices: ['23', '46', '92', '48'], ans: 1, explain: 'Human somatic cells typically contain 46 chromosomes, or 23 pairs.'},
+      {id: '5-5', q: 'What is the term for the two identical copies of a chromosome after DNA replication?', choices: ['Sister chromatids', 'Homologous chromosomes', 'Alleles', 'Centromeres'], ans: 0, explain: 'After DNA replication, each chromosome consists of two identical sister chromatids connected at the centromere.'},
+      {id: '5-6', q: 'What is the significance of homologous chromosomes?', choices: ['They are identical chromosomes from the same parent', 'They are chromosomes that carry the same genes but may have different alleles', 'They pair during anaphase of mitosis', 'They do not participate in sexual reproduction'], ans: 1, explain: 'Homologous chromosomes are pairs of chromosomes that carry the same genes but may have different alleles.'},
+      {id: '5-7', q: 'What is the process called where homologous chromosomes exchange genetic material during meiosis?', choices: ['Crossing-over', 'Replication', 'Translation', 'Transcription'], ans: 0, explain: 'Crossing-over is the process where homologous chromosomes exchange portions of their chromatids, increasing genetic variation.'},
+      {id: '5-8', q: 'What is an allele?', choices: ['A variant of a gene', 'A segment of RNA', 'A type of mutation', 'A protein'], ans: 0, explain: 'An allele is a variant of a gene that can produce different traits, such as eye color.'},
+      {id: '5-9', q: 'What is a genetic locus?', choices: ['A location on a chromosome', 'A type of allele', 'A form of mutation', 'The sequence of nucleotides in a gene'], ans: 0, explain: 'A locus is the specific physical location of a gene or other significant sequence on a chromosome.'},
+      {id: '5-10', q: 'Which of the following is true about X and Y chromosomes?', choices: ['X chromosomes are larger and carry more genes', 'Y chromosomes are more common in females', 'Y chromosomes determine female sex', 'X chromosomes determine male sex'], ans: 0, explain: 'The X chromosome is larger and carries more genes compared to the Y chromosome, which determines male sex in humans.'},
+      {id: '5-11', q: 'What does a phenotype refer to?', choices: ['The genetic composition of an organism', 'The physical expression of genes', 'The location of genes on chromosomes', 'The process of gene replication'], ans: 1, explain: 'A phenotype refers to the observable physical characteristics of an organism resulting from its genotype.'},
+      {id: '5-12', q: 'What is a genetic mutation?', choices: ['A change in the sequence of DNA', 'A copy of DNA', 'The process of transcription', 'A gene that is not expressed'], ans: 0, explain: 'A genetic mutation is a change in the DNA sequence that can alter the function of a gene.'},
+      {id: '5-13', q: 'What is the role of the centromere?', choices: ['It holds the sister chromatids together', 'It carries genetic information', 'It forms the spindle apparatus', 'It synthesizes DNA'], ans: 0, explain: 'The centromere holds sister chromatids together until they are separated during cell division.'},
+      {id: '5-14', q: 'Which of the following is true about a gene mutation?', choices: ['It always results in a genetic disorder', 'It can occur due to environmental factors or errors during DNA replication', 'It always causes an observable phenotype', 'It cannot be passed to offspring'], ans: 1, explain: 'Gene mutations can occur due to environmental factors or errors during DNA replication, and not all mutations result in disorders or visible traits.'},
+      {id: '5-15', q: 'What is the role of telomeres in chromosomes?', choices: ['They protect the ends of chromosomes from damage', 'They control cell division', 'They help chromosomes pair during meiosis', 'They repair damaged DNA'], ans: 0, explain: 'Telomeres are repetitive DNA sequences at the ends of chromosomes that protect them from degradation during cell division.'},
+  {
+    "id": "5-1",
+    "q": "What is the main genetic material of bacteria?",
+    "choices": ["DNA", "RNA", "Plasmids", "Chromosomes"],
+    "ans": 0,
+    "explain": "The main genetic material in bacteria is DNA, which carries essential genes for bacterial survival."
+  },
+  {
+    "id": "5-2",
+    "q": "What is a plasmid?",
+    "choices": ["A protein", "A small DNA molecule", "A type of RNA", "A chromosomal sequence"],
+    "ans": 1,
+    "explain": "Plasmids are small circular DNA molecules that carry non-essential genes in bacteria."
+  },
+  {
+    "id": "5-3",
+    "q": "What does the F factor plasmid enable in bacteria?",
+    "choices": ["Resistance to antibiotics", "Conjugation", "Virulence", "DNA replication"],
+    "ans": 1,
+    "explain": "The F factor plasmid enables conjugation, allowing the transfer of genetic material between bacteria."
+  },
+  {
+    "id": "5-4",
+    "q": "What is binary fission?",
+    "choices": ["Sexual reproduction", "Cell division in bacteria", "Gene transfer", "Gene expression"],
+    "ans": 1,
+    "explain": "Binary fission is the method by which bacteria reproduce, involving the division of a single cell into two identical daughter cells."
+  },
+  {
+    "id": "5-5",
+    "q": "What is the primary function of a bacterial operon?",
+    "choices": ["To synthesize proteins", "To regulate gene expression", "To replicate DNA", "To store genetic material"],
+    "ans": 1,
+    "explain": "An operon is a cluster of genes regulated together, enabling bacteria to control gene expression efficiently."
+  },
+  {
+    "id": "5-6",
+    "q": "Which of the following processes is an example of horizontal gene transfer?",
+    "choices": ["Conjugation", "Mitosis", "Binary fission", "DNA replication"],
+    "ans": 0,
+    "explain": "Horizontal gene transfer involves the transfer of genetic material between bacteria of the same generation, such as through conjugation."
+  },
+  {
+    "id": "5-7",
+    "q": "What is transformation in bacteria?",
+    "choices": ["Gene exchange via a phage", "The uptake of foreign DNA from the environment", "Conjugation", "Gene regulation"],
+    "ans": 1,
+    "explain": "Transformation is the process by which bacteria take up naked foreign DNA from their surroundings."
+  },
+  {
+    "id": "5-8",
+    "q": "What is transduction in bacterial genetics?",
+    "choices": ["Gene exchange between bacteria", "The introduction of DNA by a bacteriophage", "The uptake of foreign DNA", "Conjugation between two bacteria"],
+    "ans": 1,
+    "explain": "Transduction is the process by which bacterial DNA is transferred between bacteria by bacteriophages."
+  },
+  {
+    "id": "5-9",
+    "q": "What is a key difference between the lytic and lysogenic cycles of bacteriophages?",
+    "choices": ["Lytic cycle causes cell lysis; lysogenic cycle integrates viral DNA into the host genome", "Both cycles involve the same process", "Lytic cycle integrates viral DNA", "Lysogenic cycle leads to cell death immediately"],
+    "ans": 0,
+    "explain": "In the lytic cycle, the phage causes cell lysis, while in the lysogenic cycle, the phage integrates its DNA into the host genome."
+  },
+  {
+    "id": "5-10",
+    "q": "What is the role of the repressor in bacterial gene regulation?",
+    "choices": ["Initiates transcription", "Inhibits mRNA synthesis", "Activates the operon", "Synthesizes proteins"],
+    "ans": 1,
+    "explain": "A repressor inhibits the transcription of certain genes by binding to the operator region of an operon."
+  },
+  {
+    "id": "5-11",
+    "q": "What is the term for the transfer of genetic material between bacteria via direct cell-to-cell contact?",
+    "choices": ["Conjugation", "Transformation", "Transduction", "Budding"],
+    "ans": 0,
+    "explain": "Conjugation is the process where bacteria exchange genetic material through direct cell-to-cell contact."
+  },
+  {
+    "id": "5-12",
+    "q": "What are virulence plasmids responsible for?",
+    "choices": ["Metabolism", "Antibiotic resistance", "Conjugation", "Pathogenicity"],
+    "ans": 3,
+    "explain": "Virulence plasmids carry genes that make bacteria pathogenic by enabling them to cause diseases."
+  },
+  {
+    "id": "5-13",
+    "q": "What is the effect of antibiotic resistance plasmids on bacteria?",
+    "choices": ["Increase gene transfer", "Enable bacteria to resist antibiotics", "Cause bacteria to mutate", "Decrease bacterial growth rate"],
+    "ans": 1,
+    "explain": "Antibiotic resistance plasmids carry genes that enable bacteria to resist the effects of antibiotics."
+  },
+  {
+    "id": "5-14",
+    "q": "What happens during the process of bacterial recombination?",
+    "choices": ["Bacteria divide to produce offspring", "Bacteria exchange genetic material", "Bacteria synthesize new proteins", "Bacteria replicate their DNA"],
+    "ans": 1,
+    "explain": "Bacterial recombination involves the exchange of genetic material between bacteria, which can lead to new genetic combinations."
+  },
+  {
+    "id": "5-15",
+    "q": "What is the function of plasmids in bacterial cells?",
+    "choices": ["Carry essential genes", "Carry non-essential genes", "Replicate DNA", "Carry viral DNA"],
+    "ans": 1,
+    "explain": "Plasmids are small DNA molecules in bacteria that carry non-essential genes, such as those for antibiotic resistance or metabolic pathways."
+  }
+ ],
+
+    6: [
+      {id: '6-1', q: 'What is a point mutation?', choices: ['A change in a single nucleotide', 'A shift in the entire chromosome', 'The loss of a segment of DNA', 'A change in chromosome number'], ans: 0, explain: 'A point mutation is a change in a single nucleotide base in the DNA sequence.'},
+      {id: '6-2', q: 'What is a silent mutation?', choices: ['A mutation that has no effect on the protein sequence', 'A mutation that causes a frameshift', 'A mutation that results in a stop codon', 'A mutation that changes an amino acid'], ans: 0, explain: 'A silent mutation does not change the amino acid sequence of the protein due to redundancy in the genetic code.'},
+      {id: '6-3', q: 'What is a frameshift mutation?', choices: ['A mutation that shifts the reading frame of the gene', 'A mutation that inserts a stop codon', 'A mutation that results in no change to the protein', 'A mutation that changes a single nucleotide'], ans: 0, explain: 'A frameshift mutation occurs when nucleotides are inserted or deleted, shifting the reading frame of the gene.'},
+      {id: '6-4', q: 'What type of mutation causes sickle cell anemia?', choices: ['Point mutation', 'Insertion mutation', 'Deletion mutation', 'Duplication mutation'], ans: 0, explain: 'Sickle cell anemia is caused by a point mutation in the hemoglobin gene that results in a change in one amino acid.'},
+      {id: '6-5', q: 'What is a nonsense mutation?', choices: ['A mutation that creates a premature stop codon', 'A mutation that adds an extra amino acid', 'A mutation that changes one nucleotide', 'A mutation that results in no protein being made'], ans: 0, explain: 'A nonsense mutation results in a premature stop codon, leading to the truncation of the protein.'},
+      {id: '6-6', q: 'What is the term for the addition of extra nucleotides in a DNA sequence?', choices: ['Insertion mutation', 'Deletion mutation', 'Substitution mutation', 'Duplication mutation'], ans: 0, explain: 'An insertion mutation occurs when extra nucleotides are added to a DNA sequence, which may cause a frameshift.'},
+      {id: '6-7', q: 'What is a missense mutation?', choices: ['A mutation that changes one amino acid in a protein', 'A mutation that deletes part of the DNA sequence', 'A mutation that results in a stop codon', 'A mutation that causes no effect on the protein'], ans: 0, explain: 'A missense mutation changes one amino acid in the protein, which may affect the protein’s function.'},
+      {id: '6-8', q: 'What is a chromosomal inversion?', choices: ['A segment of a chromosome is reversed', 'A segment of a chromosome is lost', 'A segment of a chromosome is duplicated', 'A chromosome is completely rearranged'], ans: 0, explain: 'A chromosomal inversion occurs when a segment of a chromosome is reversed, altering the gene order.'},
+      {id: '6-9', q: 'What is a duplication mutation?', choices: ['A segment of DNA is copied', 'A base pair is substituted', 'A gene is deleted', 'A chromosome is split into two'], ans: 0, explain: 'A duplication mutation occurs when a segment of DNA is copied, leading to multiple copies of the affected gene.'},
+      {id: '6-10', q: 'What causes Down syndrome?', choices: ['A point mutation in a gene', 'A chromosomal trisomy', 'A frameshift mutation', 'A deletion mutation'], ans: 1, explain: 'Down syndrome is caused by a trisomy of chromosome 21, where an individual has three copies of this chromosome instead of two.'},
+      {id: '6-11', q: 'What is a translocation mutation?', choices: ['The exchange of genetic material between non-homologous chromosomes', 'The addition of a new gene into a chromosome', 'The loss of a part of a chromosome', 'The duplication of a segment of a chromosome'], ans: 0, explain: 'A translocation mutation involves the exchange of genetic material between non-homologous chromosomes.'},
+      {id: '6-12', q: 'Which of the following mutations is most likely to be harmful?', choices: ['A missense mutation', 'A silent mutation', 'A frameshift mutation', 'A neutral mutation'], ans: 2, explain: 'Frameshift mutations often lead to significant changes in protein structure and function, making them more harmful.'},
+      {id: '6-13', q: 'What is a duplication mutation?', choices: ['A segment of DNA is copied', 'A gene is deleted', 'A chromosome is rearranged', 'A nucleotide is substituted'], ans: 0, explain: 'A duplication mutation involves the replication of a segment of DNA, which may result in extra copies of a gene or region.'},
+      {id: '6-14', q: 'What is the effect of a deletion mutation?', choices: ['Loss of genetic material', 'Addition of extra nucleotides', 'Creation of a stop codon', 'Shift in the reading frame'], ans: 0, explain: 'A deletion mutation results in the loss of a segment of DNA, which can lead to loss of function or altered protein production.'},
+      {id: '6-15', q: 'What does genetic recombination in meiosis contribute to?', choices: ['Genetic diversity', 'Chromosomal duplication', 'Gene mutation', 'DNA replication'], ans: 0, explain: 'Genetic recombination during meiosis leads to genetic diversity in offspring, as genes are shuffled between homologous chromosomes.'},
+  {
+    "id": "6-1",
+    "q": "What is recombinant DNA technology?",
+    "choices": ["Combining DNA from different organisms", "A process of cell division", "A method for gene therapy", "DNA replication in bacteria"],
+    "ans": 0,
+    "explain": "Recombinant DNA technology involves combining DNA from different organisms to create new genetic combinations."
+  },
+  {
+    "id": "6-2",
+    "q": "What is the primary purpose of restriction enzymes in DNA technology?",
+    "choices": ["Cut DNA at specific sequences", "Join DNA fragments", "Amplify DNA", "Replicate DNA"],
+    "ans": 0,
+    "explain": "Restriction enzymes, also known as molecular scissors, cut DNA at specific sequences to allow for cloning and analysis."
+  },
+  {
+    "id": "6-3",
+    "q": "Which enzyme is responsible for joining DNA fragments?",
+    "choices": ["DNA polymerase", "DNA ligase", "RNA polymerase", "Reverse transcriptase"],
+    "ans": 1,
+    "explain": "DNA ligase is the enzyme that joins DNA fragments by catalyzing the formation of phosphodiester bonds."
+  },
+  {
+    "id": "6-4",
+    "q": "What is a vector in recombinant DNA technology?",
+    "choices": ["A DNA molecule used to carry foreign DNA", "An enzyme that cuts DNA", "A type of host cell", "A DNA sequence used for DNA sequencing"],
+    "ans": 0,
+    "explain": "A vector is a DNA molecule used to carry foreign DNA into a host cell for cloning or gene expression."
+  },
+  {
+    "id": "6-5",
+    "q": "What is the role of plasmids in recombinant DNA technology?",
+    "choices": ["To serve as vectors for cloning", "To perform gene therapy", "To create mutations in DNA", "To degrade foreign DNA"],
+    "ans": 0,
+    "explain": "Plasmids are small circular DNA molecules used as vectors to carry foreign DNA into host cells for cloning."
+  },
+  {
+    "id": "6-6",
+    "q": "Which of the following vectors is most commonly used in gene cloning?",
+    "choices": ["Cosmid", "Yeast Artificial Chromosomes", "Bacterial Artificial Chromosomes", "Plasmids"],
+    "ans": 3,
+    "explain": "Plasmids are the most commonly used vectors in gene cloning due to their small size and ability to replicate independently in host cells."
+  },
+  {
+    "id": "6-7",
+    "q": "What is the purpose of the polymerase chain reaction (PCR)?",
+    "choices": ["To amplify specific DNA sequences", "To cut DNA at specific sites", "To join DNA fragments", "To transfer genes into host cells"],
+    "ans": 0,
+    "explain": "PCR is a method used to amplify specific DNA sequences, making it easier to study and manipulate them."
+  },
+  {
+    "id": "6-8",
+    "q": "Which of the following is required for PCR amplification?",
+    "choices": ["DNA polymerase", "Heat shock", "A restriction enzyme", "Host cells"],
+    "ans": 0,
+    "explain": "PCR requires DNA polymerase to synthesize new DNA strands during the amplification process."
+  },
+  {
+    "id": "6-9",
+    "q": "Which method is used to separate DNA fragments based on size?",
+    "choices": ["PCR", "Gene gun", "Agarose gel electrophoresis", "Polymerase chain reaction"],
+    "ans": 2,
+    "explain": "Agarose gel electrophoresis is used to separate DNA fragments based on their size by applying an electric field."
+  },
+  {
+    "id": "6-10",
+    "q": "What is the significance of the Human Genome Project?",
+    "choices": ["To sequence the entire human genome", "To clone human genes", "To perform gene therapy", "To create genetically modified humans"],
+    "ans": 0,
+    "explain": "The Human Genome Project aimed to map the entire human genome and identify the functions of genes, marking a major milestone in genetics."
+  },
+  {
+    "id": "6-11",
+    "q": "What is the purpose of gene therapy?",
+    "choices": ["To replace defective genes with functional ones", "To clone organisms", "To replicate DNA", "To insert foreign genes into cells"],
+    "ans": 0,
+    "explain": "Gene therapy involves replacing defective genes with functional ones to treat genetic disorders."
+  },
+  {
+    "id": "6-12",
+    "q": "What is a key difference between somatic and germ-line gene therapy?",
+    "choices": ["Somatic gene therapy is heritable, while germ-line gene therapy is not", "Somatic gene therapy targets reproductive cells, germ-line does not", "Somatic gene therapy affects only the individual, while germ-line affects future generations", "Somatic gene therapy is illegal"],
+    "ans": 2,
+    "explain": "Somatic gene therapy targets the individual, while germ-line therapy affects the reproductive cells and can be passed to future generations."
+  },
+  {
+    "id": "6-13",
+    "q": "What does a gene probe do in genetic analysis?",
+    "choices": ["It amplifies DNA", "It identifies specific gene sequences", "It cuts DNA at specific locations", "It introduces foreign genes into cells"],
+    "ans": 1,
+    "explain": "Gene probes are used to identify specific gene sequences by binding to complementary DNA."
+  },
+  {
+    "id": "6-14",
+    "q": "Which type of mutation is used in site-directed mutagenesis?",
+    "choices": ["Point mutation", "Insertion mutation", "Deletion mutation", "Frameshift mutation"],
+    "ans": 0,
+    "explain": "Site-directed mutagenesis involves introducing specific point mutations into a gene to study its function."
+  },
+  {
+    "id": "6-15",
+    "q": "What is a major application of genetic forensics?",
+    "choices": ["Creating genetically modified crops", "Criminal investigations", "Gene therapy", "Cloning animals"],
+    "ans": 1,
+    "explain": "Genetic forensics, also known as DNA profiling, is widely used in criminal investigations to identify individuals based on DNA samples."
+  }
+],
+    7: [
+      {id: '7-1', q: 'What is Mendel’s Law of Segregation?', choices: ['Each organism has two alleles for each gene, which separate during gamete formation', 'Genes for different traits assort independently', 'The phenotype is determined solely by the environment', 'Alleles are inherited in pairs'], ans: 0, explain: 'Mendel’s Law of Segregation states that alleles for a gene segregate, or separate, during gamete formation, with each gamete receiving one allele.'},
+      {id: '7-2', q: 'What does a homozygous genotype consist of?', choices: ['Two different alleles for a gene', 'Two identical alleles for a gene', 'One dominant allele and one recessive allele', 'No alleles for a gene'], ans: 1, explain: 'A homozygous genotype consists of two identical alleles for a particular gene, either both dominant or both recessive.'},
+      {id: '7-3', q: 'What is a Punnett square used for?', choices: ['To predict the probability of genetic inheritance', 'To identify dominant alleles', 'To map chromosomes', 'To detect mutations in genes'], ans: 0, explain: 'A Punnett square is a tool used to predict the probability of offspring inheriting specific genotypes based on the parents’ genotypes.'},
+      {id: '7-4', q: 'What is a phenotype?', choices: ['The genetic makeup of an organism', 'The physical traits of an organism', 'The number of chromosomes in an organism', 'The environment of an organism'], ans: 1, explain: 'Phenotype refers to the observable physical characteristics of an organism, determined by its genotype and environmental influences.'},
+      {id: '7-5', q: 'What is the genotype of an individual with a heterozygous allele pair for a dominant trait?', choices: ['AA', 'Aa', 'aa', 'None of the above'], ans: 1, explain: 'A heterozygous genotype consists of one dominant allele and one recessive allele, represented by Aa.'},
+      {id: '7-6', q: 'What is a carrier in genetic terms?', choices: ['A person who expresses a recessive trait', 'A person who carries a dominant allele', 'A person who carries a recessive allele for a genetic disorder but does not express the disorder', 'A person who has two identical alleles for a gene'], ans: 2, explain: 'A carrier is an individual who carries one copy of a recessive allele for a genetic disorder but does not express the disorder because the dominant allele masks it.'},
+      {id: '7-7', q: 'What is a dihybrid cross used to study?', choices: ['Inheritance of two traits simultaneously', 'Inheritance of a single trait', 'Inheritance of linked genes', 'Patterns of gene mutation'], ans: 0, explain: 'A dihybrid cross is used to study the inheritance of two traits simultaneously, typically using two pairs of alleles.'},
+      {id: '7-8', q: 'What is the phenotypic ratio of a dihybrid cross between two heterozygous individuals?', choices: ['1:1', '9:3:3:1', '3:1', '1:2:1'], ans: 1, explain: 'The phenotypic ratio for a dihybrid cross between two heterozygous individuals is typically 9:3:3:1.'},
+      {id: '7-9', q: 'What does the term "incomplete dominance" refer to?', choices: ['When one allele completely masks the other allele', 'When both alleles are equally expressed', 'When the phenotype is a blend of two alleles', 'When an allele is inherited from only one parent'], ans: 2, explain: 'Incomplete dominance occurs when the phenotype is a blend of the traits from both alleles, such as in pink flowers resulting from red and white parents.'},
+      {id: '7-10', q: 'Which of the following represents a test cross?', choices: ['Crossing two homozygous individuals', 'Crossing an individual with a dominant phenotype with a homozygous recessive individual', 'Crossing two heterozygous individuals', 'Crossing individuals with identical genotypes'], ans: 1, explain: 'A test cross involves crossing an individual with a dominant phenotype but unknown genotype with a homozygous recessive individual to determine the genotype of the first parent.'},
+      {id: '7-11', q: 'What is the principle of independent assortment?', choices: ['Genes for different traits assort independently during gamete formation', 'Genes for the same trait assort independently', 'Genes for recessive traits are more likely to assort independently', 'Homologous chromosomes always assort together'], ans: 0, explain: 'Mendel’s principle of independent assortment states that genes for different traits are inherited independently of one another.'},
+      {id: '7-12', q: 'What does a codominance pattern of inheritance look like?', choices: ['One allele is dominant over the other', 'Both alleles contribute equally and are expressed in the phenotype', 'The phenotype is a blend of two alleles', 'One allele is masked by another'], ans: 1, explain: 'In codominance, both alleles contribute equally to the phenotype and are expressed simultaneously, such as in the AB blood group.'},
+      {id: '7-13', q: 'What is the difference between autosomal and sex-linked inheritance?', choices: ['Autosomal traits are linked to the X chromosome, while sex-linked traits are not', 'Autosomal traits are inherited equally by both genders, while sex-linked traits are typically inherited by males', 'Autosomal traits are inherited through mitochondria, while sex-linked traits are inherited through the X chromosome', 'Sex-linked traits are autosomal traits with extra copies'], ans: 1, explain: 'Autosomal traits are inherited from chromosomes that are not sex chromosomes, whereas sex-linked traits are associated with genes found on the sex chromosomes, often the X chromosome.'},
+      {id: '7-14', q: 'What is the principle of segregation?', choices: ['Each individual has two alleles for a gene, which separate during gamete formation', 'Genes for different traits assort independently', 'Traits are inherited as discrete units', 'Both A and B'], ans: 0, explain: 'Mendel’s principle of segregation states that the two alleles for a gene separate during gamete formation, ensuring that each gamete carries only one allele.'},
+      {id: '7-15', q: 'What is the result of crossing two heterozygous individuals for a single trait?', choices: ['1:1 ratio', '3:1 ratio', '9:3:3:1 ratio', '100% homozygous dominant'], ans: 1, explain: 'When two heterozygous individuals are crossed for a single trait, the expected phenotypic ratio is 3:1.'},
+  {id: '7-1', q: 'What is the primary purpose of Polymerase Chain Reaction (PCR)?', choices: ['DNA replication', 'Amplification of a specific DNA sequence', 'RNA transcription', 'DNA editing'], ans: 1, explain: 'PCR is used to amplify a specific DNA sequence, creating millions of copies from a very small starting sample.'},
+  {id: '7-2', q: 'Who invented the Polymerase Chain Reaction (PCR)?', choices: ['Kary Mullis', 'Thomas Brock', 'Francis Crick', 'James Watson'], ans: 0, explain: 'Kary Mullis invented PCR in 1983, revolutionizing the ability to amplify specific DNA sequences.'},
+  {id: '7-3', q: 'Which temperature is typically used for the denaturation step in PCR?', choices: ['72°C', '50-65°C', '90-96°C', '37°C'], ans: 2, explain: 'The denaturation step in PCR heats the sample to 90-96°C to break the hydrogen bonds between DNA strands, making them single-stranded.'},
+  {id: '7-4', q: 'What is the function of the primers in PCR?', choices: ['To synthesize RNA', 'To provide a starting point for DNA synthesis', 'To break hydrogen bonds', 'To amplify the entire DNA sequence'], ans: 1, explain: 'Primers are short sequences of nucleotides that bind to complementary sequences on the DNA template, providing a starting point for DNA polymerase.'},
+  {id: '7-5', q: 'What type of DNA polymerase is used in PCR for its heat-stable properties?', choices: ['Taq polymerase', 'Pfu polymerase', 'E. coli DNA polymerase', 'Klenow fragment'], ans: 0, explain: 'Taq polymerase, derived from the thermophilic bacterium *Thermus aquaticus*, is heat-stable and ideal for PCR.'},
+  {id: '7-6', q: 'Which phase in PCR involves the addition of dNTPs to the growing DNA strand?', choices: ['Denaturation', 'Annealing', 'Extension', 'Final extension'], ans: 2, explain: 'During the extension phase, DNA polymerase adds dNTPs to the primers, synthesizing new DNA strands.'},
+  {id: '7-7', q: 'What does the term "exponential amplification" refer to in PCR?', choices: ['DNA degradation', 'A rapid increase in the number of DNA copies', 'DNA denaturation', 'Incomplete DNA replication'], ans: 1, explain: 'Exponential amplification refers to the doubling of DNA after each cycle, leading to millions of copies from a small starting sample.'},
+  {id: '7-8', q: 'What does the term "annealing" refer to in PCR?', choices: ['The binding of primers to single-stranded DNA', 'The separation of DNA strands', 'The synthesis of new DNA strands', 'The cooling of the PCR mixture'], ans: 0, explain: 'During the annealing phase, primers bind to complementary sequences on the single-stranded DNA template.'},
+  {id: '7-9', q: 'Which of the following is NOT a common application of PCR?', choices: ['Medical diagnostics', 'DNA fingerprinting', 'Cloning genes', 'Protein synthesis'], ans: 3, explain: 'PCR is used for amplifying DNA, not for protein synthesis, which is carried out through translation.'},
+  {id: '7-10', q: 'What is the role of the thermal cycler in PCR?', choices: ['To break DNA strands', 'To automate temperature cycles for DNA amplification', 'To separate DNA fragments', 'To synthesize new DNA'], ans: 1, explain: 'The thermal cycler automates the heating and cooling steps of PCR, allowing precise temperature control for DNA amplification.'},
+  {id: '7-11', q: 'What is the key difference between conventional PCR and Real-Time PCR?', choices: ['Conventional PCR provides quantitative results, while Real-Time PCR provides qualitative results.', 'Real-Time PCR detects DNA in real-time during amplification, while conventional PCR only detects at the end.', 'Real-Time PCR uses fewer primers.', 'Conventional PCR is used for gene expression analysis, while Real-Time PCR is not.'], ans: 1, explain: 'Real-Time PCR provides real-time monitoring of DNA amplification during the PCR cycle, while conventional PCR only analyzes the product at the end.'},
+  {id: '7-12', q: 'What is the role of the reverse transcriptase in reverse transcription PCR (RT-PCR)?', choices: ['To convert RNA into DNA', 'To synthesize mRNA from a DNA template', 'To degrade RNA', 'To amplify RNA'], ans: 0, explain: 'Reverse transcriptase is used in RT-PCR to convert RNA into complementary DNA (cDNA) before amplification.'},
+  {id: '7-13', q: 'What is the main advantage of using Real-Time PCR compared to conventional PCR?', choices: ['Faster than conventional PCR', 'Provides quantitative results during amplification', 'Uses less DNA', 'No need for primers'], ans: 1, explain: 'Real-Time PCR provides real-time monitoring of DNA amplification, allowing quantitative analysis without the need for gel electrophoresis.'},
+  {id: '7-14', q: 'Which enzyme is responsible for unwinding DNA during transcription?', choices: ['RNA polymerase', 'Helicase', 'Ligase', 'DNA polymerase'], ans: 1, explain: 'Helicase unwinds the DNA double helix, allowing RNA polymerase to transcribe the gene into mRNA.'},
+  {id: '7-15', q: 'What is the effect of using too much magnesium (Mg²⁺) in the PCR buffer solution?', choices: ['Stronger DNA amplification', 'Faster DNA denaturation', 'Increased non-specific binding and mispriming', 'Improved primer binding'], ans: 2, explain: 'Too much magnesium in the buffer can cause non-specific binding and mispriming, leading to errors in the amplification process.'} ],
+    8: [
+      {id: '8-1', q: 'What is a karyotype used to diagnose?', choices: ['Genetic disorders', 'Viral infections', 'Blood pressure', 'Body mass index'], ans: 0, explain: 'A karyotype is used to examine the number and structure of chromosomes to diagnose genetic disorders like Down syndrome.'},
+      {id: '8-2', q: 'What is a chromosomal aberration?', choices: ['A change in the chromosome structure', 'A change in gene sequence', 'A mutation in the mitochondrial DNA', 'A change in nucleotide bases'], ans: 0, explain: 'Chromosomal aberrations are structural or numerical changes in chromosomes, which can lead to genetic disorders.'},
+      {id: '8-3', q: 'Which of the following is a type of chromosomal structural mutation?', choices: ['Deletion', 'Duplication', 'Inversion', 'All of the above'], ans: 3, explain: 'Deletion, duplication, and inversion are all types of chromosomal structural mutations that can impact gene function.'},
+      {id: '8-4', q: 'What does FISH stand for in cytogenetics?', choices: ['Fluorescence In Situ Hybridization', 'Genetic Sequence Mapping', 'Functional Imaging of Structural Heterogeneity', 'Functional In Situ Hybridization'], ans: 0, explain: 'FISH (Fluorescence In Situ Hybridization) is a technique used to detect specific DNA sequences on chromosomes using fluorescent probes.'},
+      {id: '8-5', q: 'What is the difference between trisomy and monosomy?', choices: ['Trisomy has an extra chromosome, monosomy is missing one chromosome', 'Trisomy is a condition in gametes, monosomy occurs during mitosis', 'Trisomy involves more than two sets of chromosomes, monosomy is a chromosomal disorder', 'Trisomy involves two copies of each chromosome, monosomy involves three copies'], ans: 0, explain: 'Trisomy occurs when there is an extra chromosome (such as in Down syndrome), while monosomy occurs when a chromosome is missing (such as in Turner syndrome).'},
+      {id: '8-6', q: 'What type of cytogenetic analysis can detect large chromosomal deletions or duplications?', choices: ['Karyotyping', 'FISH', 'PCR', 'Southern blot'], ans: 1, explain: 'FISH is a cytogenetic technique used to detect chromosomal deletions, duplications, and other structural abnormalities.'},
+      {id: '8-7', q: 'What is the result of a chromosomal inversion?', choices: ['A part of the chromosome is reversed', 'A part of the chromosome is duplicated', 'A part of the chromosome is lost', 'The chromosome splits into two pieces'], ans: 0, explain: 'In a chromosomal inversion, a segment of the chromosome is reversed, which may affect gene expression.'},
+      {id: '8-8', q: 'What is the main purpose of polymerase chain reaction (PCR) in cytogenetics?', choices: ['To amplify DNA for analysis', 'To create fluorescent markers', 'To replicate RNA', 'To measure gene expression'], ans: 0, explain: 'PCR is used to amplify DNA, making it easier to analyze specific genetic regions or mutations.'},
+      {id: '8-9', q: 'What chromosomal abnormality causes Down syndrome?', choices: ['Trisomy 21', 'Monosomy X', 'Trisomy 18', 'Trisomy 13'], ans: 0, explain: 'Down syndrome is caused by trisomy 21, which means there is an extra copy of chromosome 21.'},
+      {id: '8-10', q: 'What are telomeres?', choices: ['Regions at the ends of chromosomes that protect them from degradation', 'Parts of the chromosome where gene mutations occur', 'Portions of the chromosome responsible for genetic inheritance', 'The center portion of a chromosome'], ans: 0, explain: 'Telomeres are repetitive sequences at the ends of chromosomes that protect them from degradation during cell division.'},
+      {id: '8-11', q: 'What does the term “aneuploidy” refer to?', choices: ['An abnormal number of chromosomes', 'A rearranged chromosome structure', 'The presence of an extra gene', 'The presence of missing genes'], ans: 0, explain: 'Aneuploidy refers to an abnormal number of chromosomes, such as in conditions like trisomy or monosomy.'},
+      {id: '8-12', q: 'What is the chromosomal condition in Klinefelter syndrome?', choices: ['XXY', 'XXX', 'X0', 'XYY'], ans: 0, explain: 'Klinefelter syndrome occurs when a male has two X chromosomes and one Y chromosome (XXY).'},
+      {id: '8-13', q: 'What is the purpose of array CGH (comparative genomic hybridization)?', choices: ['To detect chromosomal imbalances', 'To sequence entire genomes', 'To amplify DNA', 'To visualize gene expression'], ans: 0, explain: 'Array CGH is a technique used to detect chromosomal imbalances, such as deletions or duplications of chromosomal segments.'},
+      {id: '8-14', q: 'What is the typical number of chromosomes in a human gamete?', choices: ['46', '23', '92', '44'], ans: 1, explain: 'Human gametes (sperm and egg cells) contain 23 chromosomes, one from each pair of the 46 chromosomes in somatic cells.'},
+      {id: '8-15', q: 'Which of the following techniques can be used to detect single-nucleotide polymorphisms (SNPs)?', choices: ['PCR', 'FISH', 'Array CGH', 'Sanger sequencing'], ans: 3, explain: 'Sanger sequencing can detect single-nucleotide polymorphisms (SNPs), which are variations at a single nucleotide in the DNA sequence.'},
+        {"id": "8-1", "q": "What is the primary function of electrophoresis?", "choices": ["To separate molecules by size and charge", "To replicate DNA", "To analyze protein structure", "To visualize cells"], "ans": 0, "explain": "Electrophoresis separates molecules based on their size and electrical charge under an electric field."},
+        {"id": "8-2", "q": "Which molecules are commonly separated using electrophoresis?", "choices": ["Proteins", "Lipids", "DNA", "Both proteins and DNA"], "ans": 3, "explain": "Electrophoresis is used to separate proteins, DNA, and RNA based on their size and charge."},
+        {"id": "8-3", "q": "In electrophoresis, which direction do negatively charged molecules move?", "choices": ["Towards the anode", "Towards the cathode", "They stay stationary", "They move randomly"], "ans": 0, "explain": "Negatively charged molecules, such as DNA, move towards the positively charged anode during electrophoresis."},
+        {"id": "8-4", "q": "What type of gel is typically used for nucleic acid electrophoresis?", "choices": ["Agarose gel", "Polyacrylamide gel", "Cellulose gel", "Silica gel"], "ans": 0, "explain": "Agarose gel is typically used to separate nucleic acids based on size, with larger fragments moving slower."},
+        {"id": "8-5", "q": "Which substance is used to visualize DNA in electrophoresis gels?", "choices": ["Ethidium bromide", "Agarose", "Bromophenol blue", "Water"], "ans": 0, "explain": "Ethidium bromide is a fluorescent dye that binds to DNA, allowing it to be visualized under UV light."},
+        {"id": "8-6", "q": "What is the purpose of the buffer in electrophoresis?", "choices": ["To maintain a stable pH", "To provide nutrients for the samples", "To prevent sample degradation", "To speed up the process"], "ans": 0, "explain": "The buffer maintains the pH and ensures efficient movement of molecules during electrophoresis."},
+        {"id": "8-7", "q": "What is a DNA ladder used for in electrophoresis?", "choices": ["To separate DNA fragments", "To estimate the size of DNA fragments", "To visualize the gel", "To stain the DNA"], "ans": 1, "explain": "A DNA ladder is a reference sample with DNA fragments of known sizes, used to estimate the size of unknown DNA fragments in the gel."},
+        {"id": "8-8", "q": "Which of the following is true about agarose gel electrophoresis?", "choices": ["It is used for protein separation", "It separates molecules based on size", "It only works with RNA", "It uses a solid medium to separate molecules"], "ans": 1, "explain": "Agarose gel electrophoresis separates molecules like DNA or RNA based on size, with larger molecules migrating slower."},
+        {"id": "8-9", "q": "What type of electrophoresis is used for protein separation?", "choices": ["Agarose gel electrophoresis", "Sodium dodecyl sulfate polyacrylamide gel electrophoresis (SDS-PAGE)", "Capillary electrophoresis", "Pulse-field electrophoresis"], "ans": 1, "explain": "Sodium dodecyl sulfate polyacrylamide gel electrophoresis (SDS-PAGE) is used to separate proteins by size."},
+        {"id": "8-10", "q": "Which factor most affects the migration rate of molecules in electrophoresis?", "choices": ["Molecular size", "Color of the molecule", "Volume of the buffer", "Charge on the molecule"], "ans": 0, "explain": "The size of the molecule affects its migration rate, with smaller molecules moving faster through the gel."},
+        {"id": "8-11", "q": "What type of sample is typically used in PCR-based electrophoresis?", "choices": ["DNA samples", "Protein extracts", "RNA samples", "Cells"], "ans": 0, "explain": "Polymerase chain reaction (PCR) amplifies DNA, and these PCR products are often analyzed using electrophoresis."},
+        {"id": "8-12", "q": "In pulse-field gel electrophoresis (PFGE), what is unique about the electric field?", "choices": ["It is constant throughout", "It changes direction periodically", "It uses alternating magnetic fields", "It uses a rotating gel matrix"], "ans": 1, "explain": "In PFGE, the direction of the electric field changes periodically, which helps to separate large DNA fragments that cannot be resolved by standard gel electrophoresis."},
+        {"id": "8-13", "q": "What is the purpose of the UV transilluminator in electrophoresis?", "choices": ["To provide a source of light", "To visualize stained DNA bands", "To heat the gel", "To prevent sample contamination"], "ans": 1, "explain": "The UV transilluminator is used to visualize fluorescently stained DNA bands after electrophoresis."},
+        {"id": "8-14", "q": "What is a common problem in electrophoresis that causes poor separation of bands?", "choices": ["Too low buffer concentration", "Too high buffer concentration", "Incorrect sample size", "Too much voltage"], "ans": 3, "explain": "Excessive voltage can lead to poor separation of bands and may even cause the gel to overheat, damaging the samples."},
+        {"id": "8-15", "q": "What is one key advantage of capillary electrophoresis over traditional gel electrophoresis?", "choices": ["It requires a larger sample size", "It is more precise and sensitive", "It is slower than gel electrophoresis", "It can only separate proteins"], "ans": 1, "explain": "Capillary electrophoresis is highly sensitive and precise, often used for DNA sequencing and forensic analysis."} ],
+
+   9: [
+      {id: '9-1', q: 'What is the human genome?', choices: ['The complete set of genes in the human body', 'The genetic material from the mother', 'The DNA in a single human chromosome', 'The total number of chromosomes'], ans: 0, explain: 'The human genome consists of the complete set of genes and genetic material in human DNA, containing about 20,000–25,000 genes.'},
+      {id: '9-2', q: 'What is gene therapy?', choices: ['A technique used to treat or prevent disease by modifying genes', 'A method of cloning organisms', 'A way to replace proteins in cells', 'A form of genetic mutation'], ans: 0, explain: 'Gene therapy is an experimental technique used to treat or prevent disease by inserting, altering, or removing genes within a patient’s cells.'},
+      {id: '9-3', q: 'What is the role of PCR (Polymerase Chain Reaction) in human genetics?', choices: ['Amplifies specific DNA sequences for analysis', 'Repairs DNA mutations', 'Synthesizes proteins from DNA', 'Cuts DNA into fragments'], ans: 0, explain: 'PCR is used to amplify specific DNA sequences, making it easier to analyze and study genes in human genetics.'},
+      {id: '9-4', q: 'What are single nucleotide polymorphisms (SNPs)?', choices: ['Genetic variations where a single nucleotide is altered', 'Mutations in entire genes', 'Repetitive DNA sequences', 'Chromosomal abnormalities'], ans: 0, explain: 'SNPs are variations at a single nucleotide in a DNA sequence that can affect gene function and contribute to diseases.'},
+      {id: '9-5', q: 'What is CRISPR technology used for?', choices: ['Gene editing', 'Protein synthesis', 'DNA replication', 'Chromosome separation'], ans: 0, explain: 'CRISPR is a technology used to edit genes by adding, removing, or altering DNA at specific locations.'},
+      {id: '9-6', q: 'What is a genetic marker?', choices: ['A gene or DNA sequence with a known location on a chromosome', 'A mutation that causes disease', 'A protein that synthesizes DNA', 'A specific protein product of a gene'], ans: 0, explain: 'A genetic marker is a gene or DNA sequence with a known location on a chromosome, used to identify individuals or species.'},
+      {id: '9-7', q: 'What is the function of restriction enzymes?', choices: ['Cut DNA at specific sequences', 'Synthesize RNA', 'Regulate gene expression', 'Repair DNA damage'], ans: 0, explain: 'Restriction enzymes are proteins that cut DNA at specific sequences, commonly used in genetic research and molecular cloning.'},
+      {id: '9-8', q: 'Which of the following is a genetic disorder caused by a mutation in a single gene?', choices: ['Cystic fibrosis', 'Down syndrome', 'Turner syndrome', 'Klinefelter syndrome'], ans: 0, explain: 'Cystic fibrosis is a genetic disorder caused by mutations in a single gene (CFTR gene) that affects the lungs and digestive system.'},
+      {id: '9-9', q: 'What is an example of a multifactorial genetic disorder?', choices: ['Diabetes', 'Sickle cell anemia', 'Huntington’s disease', 'Cystic fibrosis'], ans: 0, explain: 'Diabetes is a multifactorial disorder, influenced by both genetic and environmental factors.'},
+      {id: '9-10', q: 'What is the role of genetic counseling?', choices: ['To provide advice about genetic testing and risks of inheritance', 'To treat genetic disorders', 'To enhance gene expression', 'To eliminate genetic mutations'], ans: 0, explain: 'Genetic counseling provides information about the risks of genetic conditions and helps individuals make informed decisions about genetic testing and family planning.'},
+      {id: '9-11', q: 'What is a gene knockout?', choices: ['The removal of a gene from an organism’s genome', 'The duplication of a gene', 'A mutation that leads to gene overexpression', 'The insertion of foreign DNA into a gene'], ans: 0, explain: 'Gene knockout is a technique used to create an organism that lacks a specific gene, allowing researchers to study its function.'},
+      {id: '9-12', q: 'What is the significance of mitochondrial DNA?', choices: ['It is inherited only from the mother and can be used to trace maternal lineage', 'It is identical in every cell', 'It is responsible for protein synthesis', 'It is unaffected by mutations'], ans: 0, explain: 'Mitochondrial DNA is inherited only from the mother and is often used in tracing maternal ancestry and studying mitochondrial diseases.'},
+      {id: '9-13', q: 'What is the process of genome sequencing?', choices: ['Determining the complete sequence of an organism’s DNA', 'Editing a specific gene sequence', 'Cloning an organism', 'Changing the DNA sequence of a single gene'], ans: 0, explain: 'Genome sequencing involves determining the complete DNA sequence of an organism’s genome, allowing for the study of its genetic makeup.'},
+      {id: '9-14', q: 'What is a transgenic organism?', choices: ['An organism that contains foreign DNA', 'An organism with two sets of chromosomes', 'An organism that can reproduce sexually', 'An organism with no genetic variation'], ans: 0, explain: 'A transgenic organism contains foreign DNA that has been introduced into its genome, often used in research and agriculture.'},
+      {id: '9-15', q: 'What is gene therapy most commonly used for?', choices: ['To treat inherited genetic disorders', 'To enhance physical traits', 'To clone organisms', 'To alter non-heritable traits'], ans: 0, explain: 'Gene therapy is primarily used to treat inherited genetic disorders by correcting or replacing faulty genes within a patient’s cells.'}, 
+  {
+    "id": "9-1",
+    "q": "What is the primary purpose of DNA sequencing?",
+    "choices": ["To determine the exact sequence of nucleotides in DNA", "To replicate DNA", "To modify genes", "To measure gene expression"],
+    "ans": 0,
+    "explain": "DNA sequencing is used to determine the exact order of nucleotides in a DNA molecule, enabling the study of genes and mutations."
+  },
+  {
+    "id": "9-2",
+    "q": "Which method is commonly used for DNA sequencing?",
+    "choices": ["Sanger sequencing", "PCR", "Gel electrophoresis", "Western blot"],
+    "ans": 0,
+    "explain": "Sanger sequencing, also known as chain-termination sequencing, is one of the most widely used methods for DNA sequencing."
+  },
+  {
+    "id": "9-3",
+    "q": "What is the main advantage of next-generation sequencing (NGS) over Sanger sequencing?",
+    "choices": ["Higher throughput and speed", "Longer read length", "Simpler data analysis", "Lower cost"],
+    "ans": 0,
+    "explain": "NGS allows sequencing of millions of DNA fragments simultaneously, significantly increasing throughput and speed compared to Sanger sequencing."
+  },
+  {
+    "id": "9-4",
+    "q": "What does PCR stand for in the context of DNA sequencing?",
+    "choices": ["Polymerase Chain Reaction", "Protease Catalytic Replication", "Pyramid Chain Reaction", "Polymerase Chain Replication"],
+    "ans": 0,
+    "explain": "PCR (Polymerase Chain Reaction) is used to amplify small DNA segments, a critical step in many DNA sequencing workflows."
+  },
+  {
+    "id": "9-5",
+    "q": "What is the role of fluorescently labeled dideoxynucleotides (ddNTPs) in Sanger sequencing?",
+    "choices": ["To terminate DNA strand synthesis", "To amplify DNA", "To add a primer to DNA", "To modify the genetic sequence"],
+    "ans": 0,
+    "explain": "ddNTPs are used in Sanger sequencing to terminate the growing DNA strand at specific nucleotides, allowing for the determination of the DNA sequence."
+  },
+  {
+    "id": "9-6",
+    "q": "Which sequencing technology uses semiconductor technology to detect nucleotide incorporation?",
+    "choices": ["Ion Torrent", "Illumina", "PacBio", "Oxford Nanopore"],
+    "ans": 0,
+    "explain": "Ion Torrent sequencing uses semiconductor technology to detect the release of protons during nucleotide incorporation."
+  },
+  {
+    "id": "9-7",
+    "q": "Which sequencing platform is known for long-read sequencing with real-time analysis?",
+    "choices": ["PacBio", "Illumina", "Ion Torrent", "Sanger"],
+    "ans": 0,
+    "explain": "PacBio sequencing provides long-read capabilities, sequencing entire DNA molecules in real-time with high accuracy."
+  },
+  {
+    "id": "9-8",
+    "q": "What is a characteristic feature of Oxford Nanopore sequencing?",
+    "choices": ["Real-time sequencing through nanopores", "Short-read sequencing", "Fluorescent signal detection", "Capillary electrophoresis"],
+    "ans": 0,
+    "explain": "Oxford Nanopore sequencing allows real-time DNA sequencing through the passage of DNA through nanopores, detecting electrical disruptions."
+  },
+  {
+    "id": "9-9",
+    "q": "Which of the following is a potential application of DNA sequencing?",
+    "choices": ["Identifying genetic disorders", "Cloning organisms", "Gene therapy", "All of the above"],
+    "ans": 3,
+    "explain": "DNA sequencing has numerous applications, including identifying genetic disorders, gene therapy, and cloning organisms."
+  },
+  {
+    "id": "9-10",
+    "q": "What is a key disadvantage of third-generation sequencing technologies like Oxford Nanopore?",
+    "choices": ["Higher error rates compared to second-generation methods", "Slow processing speed", "Higher cost", "Limited throughput"],
+    "ans": 0,
+    "explain": "Third-generation sequencing, while innovative, often faces challenges such as higher error rates compared to second-generation methods."
+  },
+  {
+    "id": "9-11",
+    "q": "Which DNA sequencing technology is known for its ability to sequence very long reads?",
+    "choices": ["PacBio", "Ion Torrent", "Illumina", "Sanger"],
+    "ans": 0,
+    "explain": "PacBio technology is known for its ability to sequence very long DNA fragments with high accuracy."
+  },
+  {
+    "id": "9-12",
+    "q": "What is the main purpose of a reference genome in sequencing studies?",
+    "choices": ["To compare and align sequencing data", "To synthesize DNA", "To measure gene expression", "To replicate DNA"],
+    "ans": 0,
+    "explain": "A reference genome provides a standard template for comparing and aligning sequencing data, helping to identify genetic variations."
+  },
+  {
+    "id": "9-13",
+    "q": "What is the significance of the Human Genome Project?",
+    "choices": ["It sequenced the entire human genome", "It identified human genetic diseases", "It mapped the human X chromosome", "It focused on the mitochondrial genome"],
+    "ans": 0,
+    "explain": "The Human Genome Project sequenced the entire human genome, identifying all of the genes within human DNA."
+  },
+  {
+    "id": "9-14",
+    "q": "What type of data does next-generation sequencing (NGS) produce?",
+    "choices": ["Massively parallel sequence data", "Single fragment data", "Low-throughput data", "Small genome data"],
+    "ans": 0,
+    "explain": "NGS produces massively parallel sequencing data, enabling the sequencing of millions of DNA fragments simultaneously."
+  },
+  {
+    "id": "9-15",
+    "q": "Which of the following techniques is used for sequencing DNA based on the detection of fluorescence signals?",
+    "choices": ["Illumina sequencing", "PacBio sequencing", "Ion Torrent sequencing", "Sanger sequencing"],
+    "ans": 0,
+    "explain": "Illumina sequencing uses fluorescently-labeled nucleotides to detect signals emitted when nucleotides are incorporated into the growing DNA strand."
+  }
+],	
+   10: [
+      {id: '10-1', q: 'What does the chromosome theory of inheritance state?', choices: ['Genes are located on chromosomes and inherited according to Mendel’s laws', 'Chromosomes are made of protein', 'Chromosomes are inherited independently of genes', 'Genes are randomly distributed during cell division'], ans: 0, explain: 'The chromosome theory of inheritance states that genes are located on chromosomes and follow Mendelian inheritance patterns.'},
+      {id: '10-2', q: 'What is the role of the centromere in chromosome inheritance?', choices: ['It connects sister chromatids during cell division', 'It contains the genetic material', 'It repairs damaged DNA', 'It helps in crossing over during meiosis'], ans: 0, explain: 'The centromere is the region of a chromosome where the two sister chromatids are joined together and where spindle fibers attach during cell division.'},
+      {id: '10-3', q: 'What is the result of a crossover event in meiosis?', choices: ['Exchange of genetic material between homologous chromosomes', 'Replication of DNA', 'Separation of sister chromatids', 'Production of identical chromosomes'], ans: 0, explain: 'Crossing over during meiosis results in the exchange of genetic material between homologous chromosomes, increasing genetic variation.'},
+      {id: '10-4', q: 'What does independent assortment refer to in genetics?', choices: ['The random distribution of chromosomes into gametes', 'The combination of dominant and recessive alleles', 'The process by which chromosomes are replicated', 'The formation of genetic mutations'], ans: 0, explain: 'Independent assortment refers to the random distribution of maternal and paternal chromosomes into gametes during meiosis, contributing to genetic diversity.'},
+      {id: '10-5', q: 'Which of the following are true about sex-linked inheritance?', choices: ['Genes on the X chromosome show different inheritance patterns in males and females', 'Sex-linked traits are equally inherited by both genders', 'Only males inherit X-linked traits', 'X-linked traits only affect females'], ans: 0, explain: 'Sex-linked traits are carried on the X chromosome and exhibit different inheritance patterns in males and females because males have only one X chromosome.'},
+      {id: '10-6', q: 'What is an example of a sex-linked genetic disorder?', choices: ['Hemophilia', 'Down syndrome', 'Cystic fibrosis', 'Alzheimer’s disease'], ans: 0, explain: 'Hemophilia is a sex-linked genetic disorder caused by a mutation in the X chromosome, leading to difficulty with blood clotting.'},
+      {id: '10-7', q: 'What is the law of independent assortment?', choices: ['The genes for different traits are inherited independently of each other', 'Alleles segregate during gamete formation', 'Genes are inherited as a unit', 'Genes for different traits can be linked together'], ans: 0, explain: 'Mendel’s law of independent assortment states that genes for different traits are inherited independently of one another during gamete formation.'},
+      {id: '10-8', q: 'What is the term for when two genes are located close together on the same chromosome?', choices: ['Gene linkage', 'Gene crossing-over', 'Gene duplication', 'Gene mutation'], ans: 0, explain: 'When two genes are located close together on the same chromosome, they tend to be inherited together, a phenomenon known as gene linkage.'},
+      {id: '10-9', q: 'What is the difference between linked and unlinked genes?', choices: ['Linked genes are inherited together, while unlinked genes assort independently', 'Linked genes assort independently, while unlinked genes are inherited together', 'Linked genes are located on different chromosomes, while unlinked genes are on the same chromosome', 'There is no difference between linked and unlinked genes'], ans: 0, explain: 'Linked genes are located on the same chromosome and tend to be inherited together, while unlinked genes are located on different chromosomes and assort independently.'},
+      {id: '10-10', q: 'Which phase of meiosis is associated with independent assortment?', choices: ['Metaphase I', 'Anaphase I', 'Prophase II', 'Telophase II'], ans: 0, explain: 'Independent assortment occurs during metaphase I, when homologous chromosomes are randomly arranged at the equatorial plate.'},
+      {id: '10-11', q: 'What is the role of the spindle fibers in meiosis?', choices: ['To separate chromosomes during cell division', 'To duplicate DNA', 'To synthesize proteins', 'To form gametes'], ans: 0, explain: 'Spindle fibers are responsible for separating chromosomes during cell division, ensuring that each daughter cell receives a correct set of chromosomes.'},
+      {id: '10-12', q: 'How does the chromosome theory of inheritance support Mendel’s laws?', choices: ['It shows that genes are located on chromosomes and inherited according to Mendel’s laws', 'It demonstrates that genetic material is passed in sets', 'It states that traits are controlled by linked genes', 'It proves that inheritance is random'], ans: 0, explain: 'The chromosome theory of inheritance supports Mendel’s laws by showing that genes are located on chromosomes and inherited according to Mendel’s principles of segregation and independent assortment.'},
+      {id: '10-13', q: 'What is the difference between autosomal and sex chromosomes?', choices: ['Autosomal chromosomes are non-sex chromosomes, while sex chromosomes determine gender', 'Autosomal chromosomes determine gender, while sex chromosomes are non-sex chromosomes', 'There is no difference between autosomal and sex chromosomes', 'Sex chromosomes are only inherited from the mother'], ans: 0, explain: 'Autosomal chromosomes are non-sex chromosomes and contain most of the genetic material, while sex chromosomes determine an individual’s gender (X and Y chromosomes).'},
+      {id: '10-14', q: 'What happens in nondisjunction during meiosis?', choices: ['Chromosomes fail to separate properly', 'Homologous chromosomes pair incorrectly', 'Genes are exchanged between chromosomes', 'Sister chromatids do not replicate'], ans: 0, explain: 'Nondisjunction occurs when chromosomes fail to separate properly during meiosis, leading to gametes with an abnormal number of chromosomes.'},
+      {id: '10-15', q: 'Which genetic condition is caused by an extra chromosome 21?', choices: ['Down syndrome', 'Turner syndrome', 'Klinefelter syndrome', 'Fragile X syndrome'], ans: 0, explain: 'Down syndrome is caused by trisomy 21, where individuals have three copies of chromosome 21 instead of two.'},
+   {
+      "id": "10-1",
+      "q": "What does DNA microarray technology allow researchers to analyze?",
+      "choices": [
+        "Gene expression patterns",
+        "Cellular respiration",
+        "Protein folding",
+        "Chromosome condensation"
+      ],
+      "ans": 0,
+      "explain": "DNA microarray technology allows for the simultaneous analysis of gene expression patterns across thousands of genes."
+    },
+    {
+      "id": "10-2",
+      "q": "What is the main difference between microarray and macroarray?",
+      "choices": [
+        "Microarrays use fluorescent dyes for detection, while macroarrays use radioactive isotopes",
+        "Microarrays are larger in size than macroarrays",
+        "Macroarrays detect gene expression while microarrays detect protein synthesis",
+        "Microarrays are used for bacterial DNA, while macroarrays are used for human DNA"
+      ],
+      "ans": 0,
+      "explain": "Microarrays use fluorescent dyes for detection, whereas macroarrays use radioactive isotopes."
+    },
+    {
+      "id": "10-3",
+      "q": "What type of sample is most commonly used in DNA microarray technology?",
+      "choices": [
+        "DNA from cells",
+        "RNA from cells",
+        "Protein from tissues",
+        "Whole cell lysate"
+      ],
+      "ans": 1,
+      "explain": "RNA is most commonly extracted from cells and reverse transcribed into complementary DNA (cDNA) for use in DNA microarrays."
+    },
+    {
+      "id": "10-4",
+      "q": "Which of the following is a typical application of DNA microarrays?",
+      "choices": [
+        "Tumor profiling",
+        "Identifying gene mutations",
+        "Studying gene expression",
+        "All of the above"
+      ],
+      "ans": 3,
+      "explain": "DNA microarrays can be used for tumor profiling, identifying gene mutations, and studying gene expression."
+    },
+    {
+      "id": "10-5",
+      "q": "What is a 'gene expression array' used to measure?",
+      "choices": [
+        "Protein expression",
+        "Gene transcription levels",
+        "Chromosomal abnormalities",
+        "Gene mutations"
+      ],
+      "ans": 1,
+      "explain": "A gene expression array measures gene transcription levels, indicating which genes are active or inactive in a given sample."
+    },
+    {
+      "id": "10-6",
+      "q": "How does fluorescence play a role in DNA microarray analysis?",
+      "choices": [
+        "Fluorescence detects the intensity of the gene expression",
+        "Fluorescence marks DNA replication",
+        "Fluorescence quantifies the amount of protein produced",
+        "Fluorescence measures the rate of cell division"
+      ],
+      "ans": 0,
+      "explain": "Fluorescence is used to detect the intensity of gene expression by marking the hybridized DNA sequences."
+    },
+    {
+      "id": "10-7",
+      "q": "What is the role of the 'probe' in a DNA microarray?",
+      "choices": [
+        "To bind to the complementary gene target",
+        "To amplify the DNA sample",
+        "To isolate specific genes from the sample",
+        "To visualize the cells"
+      ],
+      "ans": 0,
+      "explain": "In DNA microarrays, probes bind to complementary gene targets on the microarray chip, allowing for gene expression analysis."
+    },
+    {
+      "id": "10-8",
+      "q": "What happens during the hybridization step in DNA microarray analysis?",
+      "choices": [
+        "DNA is amplified",
+        "Fluorescent tags are attached to genes",
+        "Sample DNA binds to probes on the array",
+        "DNA is sequenced"
+      ],
+      "ans": 2,
+      "explain": "During hybridization, sample DNA binds to complementary probes on the array, enabling gene expression analysis."
+    },
+    {
+      "id": "10-9",
+      "q": "What is one disadvantage of DNA microarray technology?",
+      "choices": [
+        "Requires advanced bioinformatics for data analysis",
+        "Does not detect gene expression",
+        "Cannot be used for human genes",
+        "Is too expensive for widespread use"
+      ],
+      "ans": 0,
+      "explain": "DNA microarray technology requires advanced bioinformatics tools to analyze the large datasets it generates."
+    },
+    {
+      "id": "10-10",
+      "q": "How does a heat map help in interpreting DNA microarray results?",
+      "choices": [
+        "It shows the intensity of fluorescence indicating gene expression",
+        "It helps identify mutations in the genome",
+        "It tracks the migration of DNA during electrophoresis",
+        "It marks the location of the microarray probes"
+      ],
+      "ans": 0,
+      "explain": "A heat map visually represents the intensity of fluorescence from the microarray, helping to interpret gene expression levels."
+    },
+    {
+      "id": "10-11",
+      "q": "What does 'comparative genomic hybridization' (CGH) detect using DNA microarrays?",
+      "choices": [
+        "Gene mutations",
+        "Chromosomal abnormalities",
+        "Gene expression levels",
+        "RNA sequences"
+      ],
+      "ans": 1,
+      "explain": "Comparative genomic hybridization (CGH) uses DNA microarrays to detect chromosomal abnormalities such as deletions and duplications."
+    },
+    {
+      "id": "10-12",
+      "q": "What is the purpose of washing the DNA microarray after hybridization?",
+      "choices": [
+        "To remove unbound DNA and reduce background noise",
+        "To bind the DNA to the probes",
+        "To amplify the DNA",
+        "To add fluorescent markers"
+      ],
+      "ans": 0,
+      "explain": "Washing removes excess or unbound DNA, helping to reduce background noise and ensure the accuracy of the results."
+    },
+    {
+      "id": "10-13",
+      "q": "What is the function of a microarray scanner in the DNA microarray process?",
+      "choices": [
+        "To amplify DNA samples",
+        "To detect fluorescence signals from hybridized DNA",
+        "To prepare the sample",
+        "To isolate specific genes"
+      ],
+      "ans": 1,
+      "explain": "A microarray scanner detects the fluorescence signals emitted from the hybridized DNA, which is essential for analyzing gene expression."
+    },
+    {
+      "id": "10-14",
+      "q": "What kind of data does a DNA microarray generate?",
+      "choices": [
+        "Qualitative data",
+        "Quantitative data",
+        "Visual data",
+        "None of the above"
+      ],
+      "ans": 1,
+      "explain": "DNA microarrays generate quantitative data on gene expression levels, which can be analyzed to determine gene activity."
+    },
+    {
+      "id": "10-15",
+      "q": "Which type of DNA is used to create complementary DNA (cDNA) for a DNA microarray?",
+      "choices": [
+        "mRNA",
+        "Genomic DNA",
+        "cDNA",
+        "tRNA"
+      ],
+      "ans": 0,
+      "explain": "mRNA is reverse transcribed into cDNA, which is then used in DNA microarrays to study gene expression."
+    }
+],
+  "11": [
+    {"id": "11-1", "q": "What is a karyotype?", "choices": ["A graphical representation of an individual's chromosomes", "A sequence of genetic mutations", "The complete DNA sequence of a genome", "A technique to replicate DNA"], "ans": 0, "explain": "A karyotype is a photographic representation of an individual’s chromosomes arranged in pairs according to size and shape."},
+    {"id": "11-2", "q": "What is the main purpose of cytogenetics?", "choices": ["To study chromosomes and their role in genetic inheritance", "To synthesize proteins in the cell", "To replicate the DNA sequence", "To enhance the process of mitosis"], "ans": 0, "explain": "Cytogenetics is the study of chromosomes and their role in genetic inheritance, important for diagnosing genetic disorders."},
+    {"id": "11-3", "q": "What type of cells are typically used for karyotyping?", "choices": ["Non-dividing cells", "Dividing cells arrested at metaphase", "Blood cells in the G1 phase", "Mature neurons"], "ans": 1, "explain": "Karyotyping typically uses dividing cells that are arrested in metaphase because chromosomes are most visible during this phase."},
+    {"id": "11-4", "q": "What is the role of the centromere in chromosomal structure?", "choices": ["It holds sister chromatids together and attaches to spindle fibers", "It carries genetic information", "It allows for the replication of chromosomes", "It repairs damaged DNA"], "ans": 0, "explain": "The centromere is the region of a chromosome where sister chromatids are joined and where spindle fibers attach during cell division."},
+    {"id": "11-5", "q": "What is fluorescence in situ hybridization (FISH) used for?", "choices": ["To measure the amount of RNA in a cell", "To identify specific DNA sequences on chromosomes", "To isolate specific chromosomes", "To sequence the entire genome"], "ans": 1, "explain": "FISH uses fluorescently labeled probes to bind to specific DNA sequences, enabling the visualization of genetic material in its natural location."},
+    {"id": "11-6", "q": "Which of the following is a limitation of karyotyping?", "choices": ["Cannot detect small chromosomal changes", "Requires a microscope", "Can only analyze one chromosome at a time", "Requires chemical mutagens"], "ans": 0, "explain": "Karyotyping can only detect large chromosomal changes and is not suitable for identifying small structural changes."},
+    {"id": "11-7", "q": "What does G-banding reveal about chromosomes?", "choices": ["The regions of the chromosome with high GC content", "The presence of telomeres", "The dark and light banding patterns along chromosomes", "The sequence of DNA bases"], "ans": 2, "explain": "G-banding involves staining chromosomes to reveal alternating dark and light bands that indicate different regions of chromosomal DNA."},
+    {"id": "11-8", "q": "Which chromosomal feature is detected using C-banding?", "choices": ["Centromeric regions", "Telomeric regions", "AT-rich regions", "GC-rich regions"], "ans": 0, "explain": "C-banding specifically stains the centromeric regions of chromosomes, revealing the constitutive heterochromatin."},
+    {"id": "11-9", "q": "What is the significance of R-banding in cytogenetics?", "choices": ["It detects GC-rich regions of chromosomes", "It reveals telomere structures", "It identifies the centromere locations", "It highlights early-replicating euchromatin"], "ans": 3, "explain": "R-banding identifies regions of chromosomes that replicate early, typically representing euchromatin, which is less condensed."},
+    {"id": "11-10", "q": "What does a chromosomal translocation involve?", "choices": ["Exchange of genetic material between two non-homologous chromosomes", "Duplication of a gene", "Deletion of part of a chromosome", "A mutation in a single nucleotide"], "ans": 0, "explain": "A chromosomal translocation involves the exchange of genetic material between two non-homologous chromosomes, potentially leading to genetic disorders."},
+    {"id": "11-11", "q": "What is a major advantage of fluorescence in situ hybridization (FISH)?", "choices": ["It can detect small structural rearrangements in chromosomes", "It can measure gene expression", "It can clone genes", "It is used for sequencing entire genomes"], "ans": 0, "explain": "FISH allows the detection of small chromosomal rearrangements, such as deletions, duplications, or translocations, that are not visible through standard banding techniques."},
+    {"id": "11-12", "q": "What is aneuploidy?", "choices": ["An abnormal number of chromosomes", "A chromosomal inversion", "A type of chromosomal mutation", "A condition where chromosomes replicate faster than normal"], "ans": 0, "explain": "Aneuploidy is a condition where there is an abnormal number of chromosomes, such as in Down syndrome, where there are three copies of chromosome 21."},
+    {"id": "11-13", "q": "What is a karyotype typically used for?", "choices": ["To analyze protein expression", "To identify chromosomal abnormalities", "To sequence DNA", "To determine gene locations"], "ans": 1, "explain": "Karyotyping is used to visualize the full set of chromosomes in a cell, helping to identify chromosomal abnormalities like trisomies or deletions."},
+    {"id": "11-14", "q": "What is the primary limitation of chromosomal banding techniques?", "choices": ["They are labor-intensive and time-consuming", "They can detect only small changes in DNA", "They do not require a microscope", "They can only be used in plant cells"], "ans": 0, "explain": "Chromosomal banding techniques require significant time and effort, and they are often unable to detect small or subtle genetic changes."},
+    {"id": "11-15", "q": "What is the role of the probe in FISH?", "choices": ["It binds to complementary DNA sequences on chromosomes", "It amplifies DNA sequences", "It repairs genetic mutations", "It replicates the chromosome"], "ans": 0, "explain": "In FISH, the probe binds to complementary DNA sequences on chromosomes, allowing for the detection of specific regions or abnormalities."},
+    {"id": "11-16", "q": "What is the primary use of G-banding?", "choices": ["To study gene expression", "To identify chromosomal deletions", "To reveal chromosomal structure and banding patterns", "To replicate DNA"], "ans": 2, "explain": "G-banding is used to reveal distinct banding patterns of chromosomes, which helps in identifying structural features such as deletions or duplications."},
+    {"id": "11-17", "q": "Which of the following techniques is used to study the physical location of specific genes?", "choices": ["FISH", "PCR", "RT-qPCR", "Western blotting"], "ans": 0, "explain": "Fluorescence in situ hybridization (FISH) is used to detect the physical location of specific genes on chromosomes using fluorescent probes."},
+    {"id": "11-18", "q": "What chromosomal condition causes Turner syndrome?", "choices": ["Monosomy X", "Trisomy 21", "XXY", "XXX"], "ans": 0, "explain": "Turner syndrome occurs when there is a monosomy of the X chromosome (only one X chromosome in females instead of two)."},
+    {"id": "11-19", "q": "How can chromosome inversions affect gene function?", "choices": ["By changing the sequence of genes", "By preventing the chromosome from replicating", "By disrupting the interaction between genes", "By ensuring that chromosomes do not separate during meiosis"], "ans": 2, "explain": "Chromosomal inversions involve the rearrangement of genetic material, which may disrupt the function of the affected genes, potentially leading to genetic disorders."},
+    {"id": "11-20", "q": "What is the role of PCR in cytogenetics?", "choices": ["To amplify specific DNA regions for analysis", "To repair damaged DNA", "To sequence entire chromosomes", "To synthesize RNA for gene expression studies"], "ans": 0, "explain": "Polymerase chain reaction (PCR) is used to amplify specific DNA regions, enabling detailed genetic analysis and detection of chromosomal abnormalities."},
+    {"id": "11-21", "q": "What does a chromosomal duplication lead to?", "choices": ["A decrease in gene copy number", "A disruption in gene expression", "An increase in gene copy number", "A mutation that alters the gene sequence"], "ans": 2, "explain": "A chromosomal duplication results in the increase of the gene copy number, which may lead to overexpression of genes."},
+    {"id": "11-22", "q": "What is the primary purpose of using C-banding?", "choices": ["To analyze the telomere regions of chromosomes", "To highlight the centromeric regions of chromosomes", "To measure gene expression levels", "To identify chromosomal abnormalities in mitosis"], "ans": 1, "explain": "C-banding specifically stains the centromeric regions of chromosomes, which are useful for identifying structural abnormalities."},
+    {"id": "11-23", "q": "What is the role of the probe in fluorescence in situ hybridization (FISH)?", "choices": ["To amplify the DNA", "To detect specific chromosomal regions", "To induce chromosomal translocations", "To initiate replication of chromosomes"], "ans": 1, "explain": "The probe in FISH binds to complementary DNA sequences, allowing specific chromosomal regions to be detected and visualized using fluorescent markers."},
+    {"id": "11-24", "q": "What type of chromosomal mutation is commonly detected by FISH?", "choices": ["Small deletions and duplications", "Gene mutations", "Repetitive DNA sequences", "Frameshift mutations"], "ans": 0, "explain": "FISH is most effective in detecting small chromosomal deletions, duplications, and other structural changes, especially those not visible with conventional karyotyping."},
+    {"id": "11-25", "q": "Which chromosome abnormality is associated with Down syndrome?", "choices": ["Trisomy 21", "Monosomy X", "Trisomy 13", "Trisomy 18"], "ans": 0, "explain": "Down syndrome is caused by trisomy 21, where individuals have three copies of chromosome 21 instead of two."},
+    {"id": "11-26", "q": "Which chromosomal technique can be used to detect chromosomal inversions?", "choices": ["FISH", "Karyotyping", "Polymerase chain reaction", "Southern blotting"], "ans": 1, "explain": "Karyotyping is used to detect large chromosomal structural abnormalities, including inversions, by arranging chromosomes according to size and shape."},
+    {"id": "11-27", "q": "What is the main benefit of using molecular cytogenetic techniques over traditional karyotyping?", "choices": ["They can detect smaller chromosomal abnormalities", "They are faster", "They are less expensive", "They require fewer cells"], "ans": 0, "explain": "Molecular cytogenetic techniques, such as FISH, can detect small chromosomal abnormalities that are not visible using traditional karyotyping."},
+    {"id": "11-28", "q": "What is the main function of telomeres?", "choices": ["To protect the ends of chromosomes from degradation", "To ensure proper chromosomal segregation during mitosis", "To facilitate gene expression", "To catalyze DNA replication"], "ans": 0, "explain": "Telomeres are repetitive DNA sequences at the ends of chromosomes that protect them from degradation during cell division."},
+    {"id": "11-29", "q": "What technique is used to identify specific genes located on chromosomes?", "choices": ["FISH", "G-banding", "Polymerase chain reaction", "Southern blotting"], "ans": 0, "explain": "FISH uses fluorescent probes to bind to specific DNA sequences on chromosomes, helping to identify the location of individual genes."},
+    {"id": "11-30", "q": "What does G-banding reveal?", "choices": ["A chromosomal mutation in the centromere", "The structure and regions of chromosomes", "The nucleotide sequence of a gene", "The protein synthesis activity of a cell"], "ans": 1, "explain": "G-banding is a cytogenetic technique used to visualize banding patterns along chromosomes, which helps to identify structural features, deletions, and duplications."}
+],
+  "12": [
+    {"id": "12-1", "q": "Who discovered DNA fingerprinting?", "choices": ["Sir Alec Jeffreys", "James Watson", "Francis Crick", "Gregor Mendel"], "ans": 0, "explain": "DNA fingerprinting was discovered by Sir Alec Jeffreys in 1984 as a method to identify individuals using their unique DNA sequences."},
+    {"id": "12-2", "q": "What does DNA fingerprinting create?", "choices": ["DNA sequence patterns", "Protein structures", "Chromosomal maps", "RNA sequences"], "ans": 0, "explain": "DNA fingerprinting creates a pattern of DNA fragments which can be used to distinguish one individual from another."},
+    {"id": "12-3", "q": "What type of DNA sequences are most useful in DNA fingerprinting?", "choices": ["Non-coding regions", "Coding regions", "Exons", "Introns"], "ans": 0, "explain": "Non-coding regions, particularly repeat sequences like VNTRs and STRs, are highly variable between individuals and are used in DNA fingerprinting."},
+    {"id": "12-4", "q": "What is VNTR in DNA fingerprinting?", "choices": ["Variable Number of Tandem Repeats", "Very Narrow Target Repeats", "Variable Nucleotide Tandem Regions", "Viral Nucleotide Target Repeats"], "ans": 0, "explain": "VNTR stands for Variable Number of Tandem Repeats, which are used as markers in DNA fingerprinting due to their high variability between individuals."},
+    {"id": "12-5", "q": "What is the main purpose of PCR in DNA fingerprinting?", "choices": ["To amplify DNA for analysis", "To extract DNA from cells", "To visualize the DNA", "To cut DNA into fragments"], "ans": 0, "explain": "PCR (Polymerase Chain Reaction) is used to amplify specific DNA sequences, making it easier to analyze those sequences in DNA fingerprinting."},
+    {"id": "12-6", "q": "What is STR in DNA fingerprinting?", "choices": ["Short Tandem Repeats", "Single Target Repeats", "Synthetic Tandem Repeats", "Small Target Repeats"], "ans": 0, "explain": "STR stands for Short Tandem Repeats, which are short sequences of DNA repeated multiple times, and are commonly used in forensic DNA analysis."},
+    {"id": "12-7", "q": "What is the primary use of DNA fingerprinting in forensic science?", "choices": ["To match crime scene samples to suspects", "To study genetic disorders", "To trace ancestry", "To identify species"], "ans": 0, "explain": "DNA fingerprinting is primarily used in forensic science to match crime scene samples (e.g., blood, hair) to suspects or victims."},
+    {"id": "12-8", "q": "What type of analysis does DNA fingerprinting often use for visualization?", "choices": ["Gel electrophoresis", "Western blotting", "Mass spectrometry", "DNA sequencing"], "ans": 0, "explain": "DNA fingerprinting often uses gel electrophoresis to separate and visualize DNA fragments based on their size."},
+    {"id": "12-9", "q": "What is a DNA probe used for in DNA fingerprinting?", "choices": ["To label and identify specific DNA sequences", "To break down the DNA strands", "To amplify DNA", "To isolate the DNA from a sample"], "ans": 0, "explain": "A DNA probe is used to label specific DNA sequences and make them detectable during analysis, such as in Southern blotting."},
+    {"id": "12-10", "q": "What does the term 'polymorphism' refer to in DNA fingerprinting?", "choices": ["Variations in DNA sequences", "Identical DNA sequences", "DNA mutations", "DNA replication errors"], "ans": 0, "explain": "Polymorphism refers to the variations in DNA sequences that are unique to each individual, which is the basis for DNA fingerprinting."},
+    {"id": "12-11", "q": "What is the advantage of using STRs over VNTRs in DNA fingerprinting?", "choices": ["STRs are shorter and more easily amplified by PCR", "STRs are less variable", "STRs are found in coding regions", "STRs are easier to visualize"], "ans": 0, "explain": "STRs are shorter and easier to amplify using PCR, making them more efficient for DNA fingerprinting, especially for degraded samples."},
+    {"id": "12-12", "q": "What is the primary challenge when collecting DNA for fingerprinting?", "choices": ["The DNA must be uncontaminated and abundant", "The DNA must be from coding regions", "The DNA must be from a specific species", "The DNA must be visible to the naked eye"], "ans": 0, "explain": "For successful DNA fingerprinting, the DNA sample must be uncontaminated, abundant, and preferably non-degraded."},
+    {"id": "12-13", "q": "What is an autoradiograph in DNA fingerprinting?", "choices": ["A film that shows the pattern of DNA fragments", "A chart of DNA sequences", "A method of amplifying DNA", "A type of gel used for separation"], "ans": 0, "explain": "An autoradiograph is a film produced after DNA fragments are detected with radioactive probes, showing the pattern of fragments in DNA fingerprinting."},
+    {"id": "12-14", "q": "What is the main principle behind DNA fingerprinting?", "choices": ["No two people have the same DNA sequence", "All humans share identical DNA", "DNA is only found in the nucleus", "Genes are inherited randomly"], "ans": 0, "explain": "The main principle behind DNA fingerprinting is that each individual has a unique DNA sequence, which can be used for identification."},
+    {"id": "12-15", "q": "What is the importance of using DNA fingerprinting in parentage testing?", "choices": ["To match a child with both biological parents", "To identify the species of the child", "To determine the child's genetic disorder", "To trace the ancestral lineage of a child"], "ans": 0, "explain": "DNA fingerprinting is used in parentage testing to confirm the biological relationship between a child and their parents by comparing their DNA profiles."},
+    {"id": "12-16", "q": "What is the purpose of Southern blotting in DNA fingerprinting?", "choices": ["To transfer DNA from a gel to a membrane for further analysis", "To amplify DNA for analysis", "To cut DNA into fragments", "To isolate a specific gene"], "ans": 0, "explain": "Southern blotting is a technique used to transfer DNA from a gel to a membrane where it can be probed and analyzed for specific sequences."},
+    {"id": "12-17", "q": "Which of the following is a major application of DNA fingerprinting?", "choices": ["Paternity testing", "Diagnosing genetic diseases", "Cloning organisms", "Transplant organ matching"], "ans": 0, "explain": "DNA fingerprinting is widely used in paternity testing to confirm biological relationships between individuals."},
+    {"id": "12-18", "q": "What is the role of electrophoresis in DNA fingerprinting?", "choices": ["To separate DNA fragments by size", "To label the DNA", "To amplify the DNA", "To repair DNA"], "ans": 0, "explain": "Electrophoresis is used to separate DNA fragments based on size, helping in the analysis of DNA samples in fingerprinting."},
+    {"id": "12-19", "q": "What type of biological sample can be used in DNA fingerprinting?", "choices": ["Blood", "Hair", "Saliva", "All of the above"], "ans": 3, "explain": "DNA fingerprinting can be performed using various biological samples, including blood, hair, and saliva."},
+    {"id": "12-20", "q": "Which technique is used to detect DNA fragments after electrophoresis?", "choices": ["Autoradiography", "PCR", "FISH", "Gene cloning"], "ans": 0, "explain": "After electrophoresis, autoradiography is used to detect the presence of labeled DNA fragments, revealing the DNA fingerprint."},
+    {"id": "12-21", "q": "How does DNA fingerprinting help in criminal investigations?", "choices": ["By matching DNA samples from crime scenes to suspects", "By determining the cause of death", "By identifying the criminal's weapon", "By analyzing the criminal's physical appearance"], "ans": 0, "explain": "DNA fingerprinting can be used in criminal investigations to match DNA samples from crime scenes to suspects, providing crucial evidence."},
+    {"id": "12-22", "q": "What does the term 'DNA polymorphism' refer to in DNA fingerprinting?", "choices": ["Variation in DNA sequence between individuals", "A mutation in a single nucleotide", "Identical DNA sequences between individuals", "The process of DNA replication"], "ans": 0, "explain": "DNA polymorphism refers to the variations in DNA sequences between individuals, which is the basis for DNA fingerprinting."},
+    {"id": "12-23", "q": "What is the advantage of using STRs (Short Tandem Repeats) in DNA fingerprinting?", "choices": ["They are highly variable between individuals", "They are found in coding regions", "They are easier to isolate", "They are more stable than VNTRs"], "ans": 0, "explain": "STRs are highly variable between individuals, making them ideal for use in DNA fingerprinting."},
+    {"id": "12-24", "q": "Which enzyme is commonly used to cut DNA into smaller fragments for DNA fingerprinting?", "choices": ["Restriction enzymes", "DNA polymerase", "RNA polymerase", "Ligase"], "ans": 0, "explain": "Restriction enzymes are used to cut DNA into smaller fragments at specific sequences, which is a key step in DNA fingerprinting."},
+    {"id": "12-25", "q": "What is the main advantage of using DNA fingerprinting over traditional identification methods?", "choices": ["It is highly accurate and unique to each individual", "It is faster and easier to perform", "It is less expensive", "It requires no equipment"], "ans": 0, "explain": "DNA fingerprinting is highly accurate and can uniquely identify individuals based on their DNA, making it more reliable than traditional identification methods."},
+    {"id": "12-26", "q": "What type of mutation does DNA fingerprinting typically identify?", "choices": ["Point mutations", "Insertion mutations", "Polymorphisms in non-coding regions", "Frameshift mutations"], "ans": 2, "explain": "DNA fingerprinting typically identifies polymorphisms in non-coding regions, such as STRs and VNTRs, which are highly variable between individuals."},
+    {"id": "12-27", "q": "Which part of DNA is most commonly used in forensic DNA fingerprinting?", "choices": ["Non-coding regions", "Exons", "Introns", "Mitochondrial DNA"], "ans": 0, "explain": "Non-coding regions, such as STRs and VNTRs, are used in forensic DNA fingerprinting because they are highly variable and provide unique patterns for each individual."},
+    {"id": "12-28", "q": "What is the purpose of the ladder in gel electrophoresis during DNA fingerprinting?", "choices": ["To determine the size of DNA fragments", "To amplify DNA", "To separate DNA from proteins", "To visualize the DNA"], "ans": 0, "explain": "The ladder in gel electrophoresis serves as a reference to determine the size of DNA fragments, helping to identify matching patterns."},
+    {"id": "12-29", "q": "What is the role of PCR in DNA fingerprinting?", "choices": ["To amplify specific DNA regions for analysis", "To cut DNA into fragments", "To visualize DNA in the gel", "To sequence the entire genome"], "ans": 0, "explain": "PCR is used to amplify specific regions of DNA, making them easier to analyze and detect in DNA fingerprinting."},
+    {"id": "12-30", "q": "What is the significance of DNA fingerprinting in historical research?", "choices": ["It can trace family lineage and ancestry", "It helps identify ancient DNA mutations", "It determines the age of fossils", "It tracks genetic diseases in populations"], "ans": 0, "explain": "DNA fingerprinting can be used in historical research to trace family lineage and ancestry by analyzing genetic markers passed down through generations."}
+],
+  "13": [
+    { "id": "13-1", "q": "What is a blood group?", "choices": ["A type of blood group", "A combination of genes", "A group of antibodies", "A specific antigen"], "ans": 0, "explain": "A blood group refers to the classification of blood based on the presence of specific antigens on the surface of red blood cells." },
+    { "id": "13-2", "q": "What is immunohematology?", "choices": ["The study of blood types", "The study of human genes", "The study of blood group antigens and antibodies", "The process of blood transfusion"], "ans": 2, "explain": "Immunohematology is the study of blood group antigens and antibodies." },
+    { "id": "13-3", "q": "What does agglutination refer to?", "choices": ["The process of blood typing", "The clumping together of red blood cells", "The formation of blood antibodies", "The interaction between red blood cells and plasma"], "ans": 1, "explain": "Agglutination refers to the clumping together of red blood cells when they come into contact with specific antibodies." },
+    { "id": "13-4", "q": "What is the genotype?", "choices": ["The outward expression of genes", "An individual’s actual genetic makeup", "The total number of chromosomes", "A type of genetic mutation"], "ans": 1, "explain": "Genotype refers to an individual’s actual genetic makeup." },
+    { "id": "13-5", "q": "What does 'homozygous' mean?", "choices": ["Possessing identical alleles at a gene locus", "Possessing different alleles at a gene locus", "Lacking specific blood group antigens", "Inheriting only one allele"], "ans": 0, "explain": "Homozygous means possessing identical alleles at a gene locus." },
+    { "id": "13-6", "q": "What is a heterozygous individual?", "choices": ["Possessing identical alleles at a gene locus", "Possessing different alleles at a gene locus", "Having only one set of chromosomes", "Lacking any antigens"], "ans": 1, "explain": "Heterozygous refers to possessing different alleles at a gene locus." },
+    { "id": "13-7", "q": "What does 'phenotype' refer to?", "choices": ["The genetic composition of an organism", "The physical expression of genes", "The presence of blood group antigens", "The pairing of chromosomes"], "ans": 1, "explain": "Phenotype refers to the observable physical characteristics of an organism resulting from its genotype." },
+    { "id": "13-8", "q": "What is the role of the RhD gene?", "choices": ["To produce antibodies", "To create the D antigen in Rh blood group", "To encode the A antigen", "To determine secretor status"], "ans": 1, "explain": "The RhD gene is responsible for producing the D antigen in the Rh blood group." },
+    { "id": "13-9", "q": "What is a gene locus?", "choices": ["A gene that encodes a blood type", "The location of a gene on a chromosome", "A protein produced in blood", "The specific antigen found in blood"], "ans": 1, "explain": "A gene locus refers to the physical location of a gene on a chromosome." },
+    { "id": "13-10", "q": "What is the difference between homozygous and heterozygous?", "choices": ["Homozygous has identical alleles, while heterozygous has different alleles", "Homozygous lacks alleles, while heterozygous has them", "Homozygous is rare, while heterozygous is common", "Homozygous is used for genetic mutation studies, heterozygous is not"], "ans": 0, "explain": "Homozygous refers to having identical alleles at a gene locus, while heterozygous refers to having different alleles." },
+    { "id": "13-11", "q": "What is the function of glycosyltransferase in the ABO blood group system?", "choices": ["It produces blood group antigens", "It encodes Rh antigens", "It creates the ABO gene locus", "It regulates gene mutations"], "ans": 0, "explain": "Glycosyltransferase is responsible for producing the ABO blood group antigens by transferring sugar molecules to the base structure of the red blood cell membrane." },
+    { "id": "13-12", "q": "What is the Bombay phenotype?", "choices": ["A rare recessive condition where neither A nor B antigens are present", "A variant of the Rh-negative blood group", "A condition that causes excessive blood group antigen expression", "A mutation in the Rh antigen coding gene"], "ans": 0, "explain": "The Bombay phenotype is a rare recessive condition where individuals lack A and B antigens despite having the genes for them." },
+    { "id": "13-13", "q": "What is agglutinin?", "choices": ["An antibody that causes the clumping of red blood cells", "A protein that carries blood group antigens", "An antigen on the surface of red blood cells", "The enzyme that catalyzes blood group antigen formation"], "ans": 0, "explain": "Agglutinin refers to antibodies that cause red blood cells to clump together when exposed to specific antigens." },
+    { "id": "13-14", "q": "What is the difference between an antigen and an antibody?", "choices": ["Antigens are foreign molecules that induce an immune response; antibodies are proteins that bind to antigens", "Antigens are blood cells; antibodies are foreign molecules", "Antigens are found only in blood; antibodies are found in all body fluids", "There is no difference between antigens and antibodies"], "ans": 0, "explain": "Antigens are foreign molecules that stimulate an immune response, while antibodies are proteins produced by the immune system to bind to and neutralize antigens." },
+    { "id": "13-15", "q": "What is a secretor?", "choices": ["An individual who expresses ABO antigens in their saliva", "An individual who does not express ABO antigens", "A person with only A and B antigens", "Someone who carries only Rh-positive genes"], "ans": 0, "explain": "A secretor is an individual who expresses blood group antigens in their bodily fluids, including saliva, urine, and semen." },
+    {
+      "id": "13-16", 
+      "q": "What is Rh incompatibility?", 
+      "choices": ["The situation where an Rh-negative mother has an Rh-positive fetus", "The situation where two Rh-positive individuals cannot have children", "A genetic condition causing the Rh-negative phenotype", "A rare condition where the Rh antigens are absent in blood"], 
+      "ans": 0, 
+      "explain": "Rh incompatibility occurs when an Rh-negative mother carries an Rh-positive fetus, leading to potential immune reactions."
+    },
+    {
+      "id": "13-17", 
+      "q": "What is the importance of genetic testing in blood transfusions?", 
+      "choices": ["To match blood types and avoid transfusion reactions", "To detect genetic mutations", "To assess organ compatibility", "To diagnose blood diseases"], 
+      "ans": 0, 
+      "explain": "Genetic testing in blood transfusions ensures compatibility between donor and recipient blood types, minimizing the risk of transfusion reactions."
+    },
+    {
+      "id": "13-18", 
+      "q": "What is the role of the ABO blood group system in organ transplantation?", 
+      "choices": ["It helps match organ donors and recipients", "It prevents organ rejection", "It determines the organ size", "It improves the immune response of the organ recipient"], 
+      "ans": 0, 
+      "explain": "The ABO blood group system plays a crucial role in organ transplantation by ensuring compatibility between the donor and recipient’s blood types."
+    },
+    {
+      "id": "13-19", 
+      "q": "What is agglutination in the context of blood typing?", 
+      "choices": ["The clumping of red blood cells due to antigen-antibody reactions", "The breakdown of red blood cells", "The formation of blood group antibodies", "The process of blood typing itself"], 
+      "ans": 0, 
+      "explain": "Agglutination is the clumping of red blood cells that occurs when specific antibodies react with the antigens on the surface of red blood cells."
+    },
+    {
+      "id": "13-20", 
+      "q": "What is a blood donor’s role in the ABO blood typing system?", 
+      "choices": ["To supply blood for transfusion based on antigen compatibility", "To produce antibodies for blood tests", "To create the Rh protein", "To synthesize blood group antigens"], 
+      "ans": 0, 
+      "explain": "A blood donor provides blood that must be compatible with the recipient’s blood group based on the ABO and Rh systems."},
+    { "id": "13-21", "q": "What is the importance of knowing a person’s blood type before a blood transfusion?", "choices": ["To prevent agglutination and transfusion reactions", "To determine the number of red blood cells", "To determine how much oxygen the blood can carry", "To know the person’s DNA sequence"], "ans": 0, "explain": "Knowing a person’s blood type is crucial to avoid mismatched blood transfusions, which can cause severe reactions due to the immune system attacking foreign blood cells." },
+    { "id": "13-22", "q": "How does Rh incompatibility affect pregnant women?", "choices": ["It can lead to hemolytic disease of the newborn (HDN)", "It causes birth defects", "It leads to higher chances of twin births", "It increases the risk of preterm labor"], "ans": 0, "explain": "Rh incompatibility occurs when an Rh-negative mother carries an Rh-positive fetus, which can result in hemolytic disease of the newborn (HDN), where the mother's immune system attacks the baby’s red blood cells." },
+    { "id": "13-23", "q": "How does blood type compatibility affect organ transplantation?", "choices": ["It ensures that the donor’s and recipient’s blood groups match to prevent rejection", "It is irrelevant in organ transplantation", "It guarantees the success of the transplant", "It helps in determining organ size"], "ans": 0, "explain": "Blood type compatibility is crucial in organ transplantation as matching ABO blood groups reduces the risk of transplant rejection due to immune system reactions." },
+    { "id": "13-24", "q": "Why is blood typing important in emergency medical situations?", "choices": ["To quickly match compatible blood for transfusions", "To determine the blood pressure of the patient", "To analyze genetic diseases", "To prepare for genetic testing"], "ans": 0, "explain": "In emergencies, such as trauma or surgery, quick blood typing ensures that the patient receives compatible blood, preventing adverse reactions from mismatched transfusions." },
+    { "id": "13-25", "q": "How can ABO and Rh blood group testing be used in forensic science?", "choices": ["To identify a person’s genetic makeup", "To determine the cause of death", "To match blood samples found at a crime scene", "To establish a person’s identity through DNA"], "ans": 2, "explain": "In forensic science, ABO and Rh blood group testing can be used to match blood found at crime scenes with possible suspects or victims, aiding in solving criminal investigations." },
+    { "id": "13-26", "q": "What is the role of ABO blood typing in paternity testing?", "choices": ["To establish biological parenthood based on blood group compatibility", "To determine the mother’s blood type", "To find genetic mutations", "To calculate the inheritance pattern of genetic traits"], "ans": 0, "explain": "ABO blood typing can be used in paternity testing to check if the child’s blood group is consistent with the mother’s and the alleged father’s, providing clues to biological parenthood." },
+    { "id": "13-27", "q": "How can the ABO blood group system be used to assess compatibility for a bone marrow transplant?", "choices": ["By matching the ABO blood groups of the donor and recipient", "By determining the patient’s Rh factor", "By analyzing the tissue types of the donor", "By matching the DNA sequence between donor and recipient"], "ans": 0, "explain": "For a bone marrow transplant, compatibility between donor and recipient ABO blood groups is important to reduce the risk of rejection and ensure successful engraftment of the transplanted cells." },
+    { "id": "13-28", "q": "Why is genetic testing for blood group important before a blood transfusion in neonates?", "choices": ["To prevent Rh incompatibility and jaundice", "To prevent blood clots", "To enhance the newborn’s immunity", "To test for viral infections"], "ans": 0, "explain": "Genetic testing for blood group in neonates is important to avoid Rh incompatibility, which can lead to hemolytic disease and jaundice in newborns, requiring prompt treatment." },
+    { "id": "13-29", "q": "How does blood typing help in disaster management situations?", "choices": ["To quickly sort people for blood donations", "To prioritize medical care based on blood type", "To match donors with specific patients", "To facilitate organ donation matching"], "ans": 2, "explain": "In disaster management, blood typing helps match blood donors with patients who need transfusions, ensuring that the blood is compatible and reducing the risk of transfusion reactions." },
+    { "id": "13-30", "q": "How does the ABO blood group system affect the development of vaccines?", "choices": ["It influences the efficacy of vaccines in different blood groups", "It determines the size of the vaccine dose", "It helps in creating vaccines for different diseases", "It affects the speed of immune responses to vaccines"], "ans": 0, "explain": "Research suggests that the ABO blood group system may affect the immune response to vaccines, with some blood groups possibly having different responses to certain vaccine antigens." },
+    { "id": "13-31", "q": "Why is Rh compatibility important in prenatal care?", "choices": ["To prevent Rh-negative mothers from producing antibodies against the Rh-positive fetus", "To ensure healthy fetal development", "To determine the fetal blood type", "To identify genetic disorders"], "ans": 0, "explain": "Rh compatibility is important in prenatal care to prevent Rh-negative mothers from producing antibodies against an Rh-positive fetus, which could lead to hemolytic disease of the newborn." },
+    { "id": "13-32", "q": "How does the ABO blood group system impact human evolutionary studies?", "choices": ["It helps trace ancestral migrations and genetic lineage", "It identifies genetic mutations in human history", "It determines the onset of diseases", "It tracks the spread of blood disorders"], "ans": 0, "explain": "The ABO blood group system is often used in evolutionary studies to trace human migrations and the genetic lineage of populations, offering insights into the genetic diversity of human ancestors." },
+    { "id": "13-33", "q": "What is the significance of the Bombay blood group in clinical medicine?", "choices": ["It provides insight into rare blood type inheritance patterns", "It allows doctors to identify rare diseases", "It helps in matching tissue transplants", "It aids in blood cell mutation analysis"], "ans": 0, "explain": "The Bombay blood group is a rare genetic condition that challenges typical ABO blood typing, and understanding it can help in identifying rare blood type inheritance patterns." },
+    { "id": "13-34", "q": "How does genetic testing for blood groups help in organ donation?", "choices": ["By determining the compatibility of the donor’s and recipient’s blood groups", "By identifying the correct organ size", "By detecting the genetic makeup of the recipient", "By ensuring the correct blood type during the transplant"], "ans": 0, "explain": "Genetic testing for blood groups ensures that the donor’s and recipient’s blood types are compatible, reducing the risk of rejection and ensuring successful transplantation." },
+    { "id": "13-35", "q": "How can blood typing assist in tracing ancestral lineage?", "choices": ["By matching blood group markers to historical populations", "By identifying disease susceptibility", "By determining the cause of death", "By sequencing mitochondrial DNA"], "ans": 0, "explain": "Blood typing helps trace ancestral lineage by using blood group markers to match with historical populations, revealing migration and mixing patterns over generations." },
+    { "id": "13-36", "q": "How does knowledge of ABO and Rh blood groups assist in forensic investigations?", "choices": ["By matching blood samples found at crime scenes", "By identifying the victim’s DNA", "By determining the age of the victim", "By tracing the suspect’s genetic disorder"], "ans": 0, "explain": "In forensic investigations, knowledge of ABO and Rh blood groups helps match blood samples found at crime scenes with the victim or suspect, aiding in criminal identification." },
+    { "id": "13-37", "q": "What is the importance of ABO blood group testing in population genetics?", "choices": ["To analyze the genetic diversity of populations", "To trace evolutionary patterns of human populations", "To determine susceptibility to infections", "To predict future gene mutations"], "ans": 0, "explain": "ABO blood group testing is important in population genetics for analyzing genetic diversity, tracing evolutionary patterns, and understanding the distribution of blood types in different populations." },
+    { "id": "13-38", "q": "What is the application of blood typing in prenatal testing?", "choices": ["To test for Rh incompatibility", "To detect the blood type of the baby", "To test for genetic disorders in the fetus", "To ensure the mother’s health"], "ans": 0, "explain": "Blood typing in prenatal testing is used to detect Rh incompatibility between mother and fetus, which can lead to complications such as hemolytic disease." },
+    { "id": "13-39", "q": "How does blood type influence diet and lifestyle recommendations?", "choices": ["Certain blood types may have different reactions to specific foods", "Blood type determines the body’s metabolic rate", "Blood type influences exercise regimes", "Blood type affects hormonal balance"], "ans": 0, "explain": "Some alternative health theories suggest that different blood types may have varying responses to specific foods, though scientific evidence supporting this is limited." },
+    {
+      "id": "13-40",
+      "q": "How can ABO blood typing be used in forensic medicine?",
+      "choices": ["To match blood samples from crime scenes with suspects or victims", "To predict the cause of death", "To identify the victim's age", "To determine the exact blood pressure levels"],
+      "ans": 0,
+      "explain": "In forensic medicine, ABO blood typing can match blood samples found at crime scenes with suspects or victims, aiding in criminal investigations."
+    },
+    {
+      "id": "13-41",
+      "q": "How does Rh compatibility affect pregnancy?",
+      "choices": ["Rh incompatibility can cause hemolytic disease of the newborn", "It determines the gender of the baby", "It affects the baby's growth rate", "It causes an increased risk of preterm labor"],
+      "ans": 0,
+      "explain": "Rh incompatibility occurs when an Rh-negative mother carries an Rh-positive fetus, which may result in hemolytic disease of the newborn, where the mother's immune system attacks the baby’s red blood cells."
+    },
+    {
+      "id": "13-42",
+      "q": "What is the role of ABO blood typing in disaster relief?",
+      "choices": ["To quickly match blood donors with patients", "To identify potential organ donors", "To determine the effectiveness of vaccines", "To monitor patients' recovery progress"],
+      "ans": 0,
+      "explain": "In disaster relief, ABO blood typing is used to match blood donors with patients in need of transfusions, ensuring compatibility and reducing the risk of transfusion reactions."
+    },
+    {
+      "id": "13-43",
+      "q": "How does ABO and Rh blood group testing help in organ transplantation?",
+      "choices": ["It ensures compatibility between the donor and recipient", "It measures the organ size", "It prevents organ rejection", "It boosts the immune response of the recipient"],
+      "ans": 0,
+      "explain": "ABO and Rh blood group testing ensures compatibility between the organ donor and recipient, reducing the risk of organ rejection after transplantation."
+    },
+    {
+      "id": "13-44",
+      "q": "How can ABO blood typing assist in emergency situations?",
+      "choices": ["To quickly identify compatible blood for transfusion", "To diagnose underlying genetic disorders", "To calculate blood pressure", "To assess the blood’s oxygen-carrying capacity"],
+      "ans": 0,
+      "explain": "In emergency situations, ABO blood typing ensures that the patient receives compatible blood quickly, preventing potentially dangerous transfusion reactions."
+    },
+    {
+      "id": "13-45",
+      "q": "What is the role of blood group testing in pregnancy care?",
+      "choices": ["To check for Rh incompatibility and prevent complications", "To predict the baby's gender", "To test for birth defects", "To identify potential blood disorders in the mother"],
+      "ans": 0,
+      "explain": "Blood group testing during pregnancy is essential to check for Rh incompatibility between the mother and fetus, preventing complications like hemolytic disease of the newborn."
+    },
+    {
+      "id": "13-46",
+      "q": "Why is it important to match blood types during blood donations?",
+      "choices": ["To avoid transfusion reactions", "To enhance immune system function", "To help the body recover faster", "To prevent infectious diseases"],
+      "ans": 0,
+      "explain": "Matching blood types during blood donations is crucial to avoid transfusion reactions, which can occur if the recipient's immune system attacks the donated blood."
+    },
+    {
+      "id": "13-47",
+      "q": "How does ABO blood typing contribute to gene inheritance studies?",
+      "choices": ["It helps trace the inheritance patterns of blood group genes", "It identifies the genetic makeup of individuals", "It determines gene mutation rates", "It shows how genes control immune responses"],
+      "ans": 0,
+      "explain": "ABO blood typing helps study how blood group genes are inherited from parents to offspring, tracing patterns of inheritance in populations."
+    },
+    {
+      "id": "13-48",
+      "q": "What is the significance of knowing a person's blood group during a medical emergency?",
+      "choices": ["To quickly match compatible blood for transfusions", "To determine the patient's DNA sequence", "To diagnose chronic diseases", "To analyze brain activity"],
+      "ans": 0,
+      "explain": "Knowing a person's blood group during a medical emergency is critical to quickly matching compatible blood for transfusions, which can save lives in trauma cases."
+    },
+    {
+      "id": "13-49",
+      "q": "How does blood type affect the risk of certain diseases?",
+      "choices": ["Certain blood types may increase or decrease susceptibility to specific diseases", "Blood type determines the rate of recovery", "Blood type influences the severity of infections", "Blood type affects treatment options"],
+      "ans": 0,
+      "explain": "Research suggests that different blood types may increase or decrease susceptibility to certain diseases, such as heart disease or infections like cholera."
+    },
+    {
+      "id": "13-50",
+      "q": "What is the role of blood type in forensic science?",
+      "choices": ["It helps match blood samples from crime scenes", "It determines the genetic relationship between suspects", "It provides clues to the crime’s location", "It tracks the criminal's past crimes"],
+      "ans": 0,
+      "explain": "In forensic science, blood typing is used to match blood samples from crime scenes with those of victims or suspects, providing valuable evidence for investigations."
+    },
+    {
+      "id": "13-51",
+      "q": "How does the Rh factor affect pregnancy?",
+      "choices": ["It can cause Rh incompatibility and lead to complications like hemolytic disease of the newborn", "It determines the baby’s blood type", "It affects the baby’s immune system", "It increases the risk of premature birth"],
+      "ans": 0,
+      "explain": "The Rh factor can cause Rh incompatibility between the mother and fetus, leading to complications like hemolytic disease of the newborn, which is treated with Rh immunoglobulin."
+    },
+    {
+      "id": "13-52",
+      "q": "What is the role of ABO and Rh blood group testing in genetic counseling?",
+      "choices": ["To determine the risk of Rh incompatibility and blood group-related conditions", "To trace family genetic history", "To predict the genetic disorders in future generations", "To determine the maternal and paternal blood types"],
+      "ans": 0,
+      "explain": "In genetic counseling, ABO and Rh blood group testing helps determine the risk of Rh incompatibility and other blood group-related genetic conditions, aiding in family planning."
+    },
+    {
+      "id": "13-53",
+      "q": "How is ABO and Rh blood typing used in prenatal testing?",
+      "choices": ["To check for Rh incompatibility and avoid complications", "To test for maternal infections", "To determine the baby's blood type", "To monitor fetal development"],
+      "ans": 0,
+      "explain": "ABO and Rh blood typing in prenatal testing is crucial for detecting Rh incompatibility, which can lead to hemolytic disease of the newborn if not properly managed."
+    },
+    {
+      "id": "13-54",
+      "q": "How does the ABO blood group system help in understanding human migrations?",
+      "choices": ["It helps trace the genetic lineage and migration patterns of populations", "It determines the genetic diversity of populations", "It predicts disease susceptibility across populations", "It tracks the development of human traits"],
+      "ans": 0,
+      "explain": "The ABO blood group system is often used in evolutionary and migration studies to trace the genetic lineage and migration patterns of human populations over time."
+    },
+    {
+      "id": "13-55",
+      "q": "What is the significance of the Bombay blood group in clinical practice?",
+      "choices": ["It challenges the standard ABO blood group system", "It determines the blood’s oxygen-carrying capacity", "It helps predict genetic diseases", "It aids in tissue transplantation matching"],
+      "ans": 0,
+      "explain": "The Bombay blood group is a rare genetic condition that can complicate blood transfusions and organ transplants because individuals with this blood type do not express A or B antigens despite carrying the genes for them." }, 
+    {
+      "id": "13-56",
+      "q": "How can knowledge of ABO and Rh blood groups help in the management of hemolytic disease of the newborn (HDN)?",
+      "choices": ["By preventing Rh incompatibility between mother and fetus", "By predicting the severity of the disease", "By determining the exact blood type of the fetus", "By treating the condition with antibiotics"],
+      "ans": 0,
+      "explain": "Understanding ABO and Rh blood groups helps manage hemolytic disease of the newborn (HDN) by preventing Rh incompatibility, which can lead to severe health issues in newborns."
+    },
+    {
+      "id": "13-57",
+      "q": "How does ABO and Rh blood group testing play a role in population health surveys?",
+      "choices": ["It helps estimate genetic disease prevalence in populations", "It identifies susceptibility to infectious diseases", "It tracks environmental factors affecting populations", "It helps map out healthcare access by region"],
+      "ans": 0,
+      "explain": "ABO and Rh blood group testing in population health surveys is used to estimate genetic disease prevalence, as blood group systems can affect susceptibility to certain conditions."
+    },
+    {
+      "id": "13-58",
+      "q": "Why is knowing the blood type of a newborn important in the case of organ donation?",
+      "choices": ["To ensure compatibility with a donor", "To prevent genetic mutations", "To regulate the immune response", "To predict the likelihood of rejection"],
+      "ans": 0,
+      "explain": "Knowing the blood type of a newborn is crucial in organ donation to ensure compatibility with the donor’s blood group, preventing rejection and ensuring the success of the transplant."
+    },
+    {
+      "id": "13-59",
+      "q": "How does the Rh factor impact the likelihood of maternal-fetal transmission of certain infections?",
+      "choices": ["It does not affect infection transmission", "It increases the risk of maternal-fetal transmission", "It protects against maternal-fetal transmission", "It reduces the need for vaccinations"],
+      "ans": 0,
+      "explain": "The Rh factor can affect the maternal-fetal transmission of infections by influencing the immune response, which is why Rh incompatibility must be managed carefully during pregnancy."
+    },
+    {
+      "id": "13-60",
+      "q": "How is ABO and Rh blood typing used in personalized medicine?",
+      "choices": ["To tailor drug prescriptions based on blood type compatibility", "To determine the genetic mutation responsible for disease", "To predict an individual's health risk for specific conditions", "To select the best blood pressure medication"],
+      "ans": 0,
+      "explain": "In personalized medicine, ABO and Rh blood typing is used to tailor drug prescriptions based on blood type compatibility, which can influence how certain medications are processed in the body."
+    }
+],
+  "14": [
+    {"id": "14-1", "q": "What does 'mutation' refer to?", "choices": ["A change in the DNA sequence", "A genetic disorder", "A disease caused by bacteria", "A random change in the environment"], "ans": 0, "explain": "A mutation is a permanent alteration in the DNA sequence that makes up a gene."},
+    {"id": "14-2", "q": "What is a 'frameshift mutation'?", "choices": ["A mutation caused by inserting or deleting nucleotides", "A mutation that changes a single nucleotide", "A mutation that occurs in the third base of a codon", "A mutation that results in a stop codon"], "ans": 0, "explain": "Frameshift mutations occur when nucleotides are added or removed, changing the reading frame of the gene."},
+    {"id": "14-3", "q": "What is the primary cause of genetic mutations?", "choices": ["External factors like radiation or chemicals", "The inheritance of faulty genes", "DNA replication errors", "All of the above"], "ans": 3, "explain": "Genetic mutations can be caused by environmental factors, replication errors, or inherited faulty genes."},
+    {"id": "14-4", "q": "What is a 'silent mutation'?", "choices": ["A mutation that does not affect the protein function", "A mutation that creates a stop codon", "A mutation that alters the amino acid sequence", "A mutation in non-coding regions"], "ans": 0, "explain": "A silent mutation is a change in the DNA sequence that does not affect the final protein product."},
+    {"id": "14-5", "q": "What is a 'point mutation'?", "choices": ["A change in a single nucleotide base pair", "A change that affects entire chromosomes", "A change that involves a large insertion of DNA", "A mutation that affects multiple genes"], "ans": 0, "explain": "Point mutations involve a single nucleotide base pair change in the DNA sequence."},
+    {"id": "14-6", "q": "What is a 'nonsense mutation'?", "choices": ["A mutation that introduces a premature stop codon", "A mutation that does not affect the amino acid sequence", "A mutation that causes a frameshift", "A mutation that changes a single nucleotide"], "ans": 0, "explain": "A nonsense mutation introduces a premature stop codon, leading to a truncated protein."},
+    {"id": "14-7", "q": "What does 'homozygosity' mean?", "choices": ["Having two identical alleles for a gene", "Having two different alleles for a gene", "Having no alleles for a gene", "Having only one allele for a gene"], "ans": 0, "explain": "Homozygosity refers to having two identical alleles for a gene."},
+    {"id": "14-8", "q": "What is a 'recessive allele'?", "choices": ["An allele that is expressed only when two copies are present", "An allele that is always expressed", "An allele that is never expressed", "An allele that is expressed in heterozygotes"], "ans": 0, "explain": "A recessive allele is only expressed in the phenotype when two copies are present (homozygous)."},
+    {"id": "14-9", "q": "What is a 'dominant allele'?", "choices": ["An allele that masks the expression of another allele", "An allele that is never expressed", "An allele that is expressed only in homozygotes", "An allele that is rare"], "ans": 0, "explain": "A dominant allele is one that expresses its trait even when only one copy is present in a heterozygous individual."},
+    {"id": "14-10", "q": "What does 'genotype' refer to?", "choices": ["An organism's genetic makeup", "An organism's physical appearance", "An organism's protein structure", "An organism's blood type"], "ans": 0, "explain": "Genotype refers to the genetic makeup of an organism, including all the alleles it possesses."},
+    {"id": "14-11", "q": "What does 'phenotype' refer to?", "choices": ["The physical expression of genes", "The genetic makeup of an organism", "The DNA sequence", "The mutation in a gene"], "ans": 0, "explain": "Phenotype refers to the observable traits or characteristics of an organism resulting from the interaction of its genotype with the environment."},
+    {"id": "14-12", "q": "What is a 'genetic disorder'?", "choices": ["A disease caused by mutations in genes", "A disease caused by external environmental factors", "A condition caused by viral infections", "A condition caused by aging"], "ans": 0, "explain": "A genetic disorder is a condition caused by mutations in one or more genes that affect the normal functioning of the body."},
+    {"id": "14-13", "q": "What is 'aneuploidy'?", "choices": ["A condition where the number of chromosomes is abnormal", "A type of mutation that affects only one gene", "A genetic disorder caused by recessive alleles", "A condition where genes are duplicated"], "ans": 0, "explain": "Aneuploidy refers to the presence of an abnormal number of chromosomes in a cell, such as in Down syndrome."},
+    {"id": "14-14", "q": "What is the effect of a 'deletion mutation'?", "choices": ["A portion of the chromosome is lost", "A portion of the chromosome is duplicated", "A part of the gene sequence is inverted", "A gene is split into two"], "ans": 0, "explain": "Deletion mutations result in the loss of a portion of the chromosome or DNA sequence, which can cause genetic disorders."},
+    {"id": "14-15", "q": "What is 'polyploidy'?", "choices": ["A condition where a cell has more than two sets of chromosomes", "A mutation affecting a single nucleotide", "A form of genetic disorder", "A type of gene mutation"], "ans": 0, "explain": "Polyploidy is a condition in which an organism has more than two complete sets of chromosomes, common in plants."},
+    {"id": "14-16", "q": "What does 'trisomy' mean?", "choices": ["The presence of an extra chromosome", "The loss of a chromosome", "The duplication of a chromosome segment", "The deletion of a chromosome segment"], "ans": 0, "explain": "Trisomy refers to the condition where an individual has an extra chromosome, resulting in a total of three copies instead of two."},
+    {"id": "14-17", "q": "What is the main characteristic of 'Klinefelter syndrome'?", "choices": ["Presence of an extra X chromosome in males", "Presence of an extra Y chromosome in females", "Presence of an extra chromosome 21", "Absence of an X chromosome in males"], "ans": 0, "explain": "Klinefelter syndrome occurs when males have an extra X chromosome (XXY), leading to symptoms like infertility and physical abnormalities."},
+    {"id": "14-18", "q": "What is the effect of 'Down syndrome'?", "choices": ["It is caused by trisomy 21", "It is caused by a single point mutation", "It results in mental and physical disabilities", "It is an X-linked disorder"], "ans": 0, "explain": "Down syndrome is caused by trisomy 21, where individuals have three copies of chromosome 21, leading to mental retardation and physical abnormalities."},
+    {"id": "14-19", "q": "What is a 'mutation hotspot'?", "choices": ["A region of DNA that is more prone to mutations", "A gene that controls mutation", "A region of DNA that repairs mutations", "A site where gene mutations are rare"], "ans": 0, "explain": "A mutation hotspot is a region of the DNA where mutations are more likely to occur due to its sequence or structure."},
+    {"id": "14-20", "q": "What is 'nonsense mutation'?", "choices": ["A mutation that causes a premature stop codon", "A mutation that changes an amino acid", "A mutation that does not alter the protein", "A mutation that causes a frameshift"], "ans": 0, "explain": "A nonsense mutation causes a premature stop codon, which truncates the protein and often results in a nonfunctional protein."},
+    {"id": "14-21", "q": "What does 'intercalary' mean in terms of chromosome structure?", "choices": ["Located within the sequence of a chromosome", "Located at the ends of chromosomes", "A part of the chromosome involved in replication", "A type of gene mutation"], "ans": 0, "explain": "Intercalary refers to a segment of the chromosome that is located within the sequence rather than at the ends."},
+    {"id": "14-22", "q": "What is 'autosomal aneuploidy'?", "choices": ["A condition where there is an abnormal number of autosomal chromosomes", "A type of genetic disorder caused by mutations", "A condition affecting only sex chromosomes", "A type of polyploidy"], "ans": 0, "explain": "Autosomal aneuploidy refers to abnormalities in the number of autosomal chromosomes, such as in Down syndrome (trisomy 21)."},
+    {"id": "14-23", "q": "What does 'translocation' mean in genetics?", "choices": ["The exchange of genetic material between non-homologous chromosomes", "The deletion of a part of a chromosome", "The duplication of a chromosome segment", "The separation of homologous chromosomes"], "ans": 0, "explain": "Translocation is a type of chromosomal mutation where a segment of one chromosome is exchanged with a segment from another non-homologous chromosome."},
+    {"id": "14-24", "q": "What is the term 'monosomy'?", "choices": ["A condition where one chromosome is missing", "A condition where one chromosome is duplicated", "A genetic mutation that changes a single nucleotide", "A chromosomal rearrangement"], "ans": 0, "explain": "Monosomy is a condition in which an individual has one less chromosome than normal, such as in Turner syndrome."},
+    {"id": "14-25", "q": "What is 'trisomy' in the context of chromosomal disorders?", "choices": ["The presence of an extra chromosome", "The deletion of a chromosome", "A mutation affecting a single gene", "The duplication of a chromosome segment"], "ans": 0, "explain": "Trisomy refers to a condition where an individual has an extra chromosome, such as trisomy 21, leading to Down syndrome."}, 
+    {"id": "14-26", "q": "What is 'insertion mutation'?", "choices": ["A mutation where extra nucleotides are added to the DNA sequence", "A mutation where nucleotides are deleted from the sequence", "A mutation where nucleotides are substituted", "A mutation in which a chromosome is inverted"], "ans": 0, "explain": "An insertion mutation occurs when extra nucleotides are added to a DNA sequence, which can disrupt the normal function of the gene."},
+    {"id": "14-27", "q": "What does 'polygenic inheritance' refer to?", "choices": ["Traits controlled by multiple genes", "Traits controlled by a single gene", "Inheritance of traits determined by environmental factors", "Inheritance patterns influenced by mutations"], "ans": 0, "explain": "Polygenic inheritance refers to traits that are controlled by multiple genes, each contributing to the phenotype."},
+    {"id": "14-28", "q": "What is 'codominance'?", "choices": ["When both alleles are expressed equally in the phenotype", "When one allele completely masks the other", "When the alleles are linked", "When both alleles are recessive"], "ans": 0, "explain": "Codominance occurs when both alleles contribute equally and are expressed in the phenotype, such as in AB blood type."},
+    {"id": "14-29", "q": "What is a 'recessive allele'?", "choices": ["An allele that is expressed only when two copies are present", "An allele that always masks the effect of a dominant allele", "An allele that is inherited from the father", "An allele that is always dominant"], "ans": 0, "explain": "A recessive allele is expressed in the phenotype only when two copies of the allele are present (homozygous)."},
+    {"id": "14-30", "q": "What is 'dominant inheritance'?", "choices": ["When one allele is enough to express a trait", "When two copies of the gene are required", "When the gene is passed down only by the father", "When the gene is not expressed"], "ans": 0, "explain": "Dominant inheritance occurs when only one copy of a dominant allele is necessary for the trait to be expressed."},
+    {"id": "14-31", "q": "What does 'segregation' mean in genetics?", "choices": ["The separation of alleles during gamete formation", "The joining of homologous chromosomes", "The process of gene mutation", "The expression of dominant traits"], "ans": 0, "explain": "Segregation refers to the separation of alleles during gamete formation, ensuring each gamete carries only one allele for each gene."},
+    {"id": "14-32", "q": "What is a 'genetic carrier'?", "choices": ["An individual who has one copy of a recessive allele for a trait", "An individual with two copies of a recessive allele", "An individual with two copies of a dominant allele", "An individual who expresses both alleles equally"], "ans": 0, "explain": "A genetic carrier is an individual who has one copy of a recessive allele for a genetic disorder but does not express the condition."},
+    {"id": "14-33", "q": "What is a 'genetic disorder'?", "choices": ["A condition caused by a mutation in one or more genes", "A disease caused by bacterial infection", "A viral disease", "A condition caused by environmental factors"], "ans": 0, "explain": "A genetic disorder is a disease or condition caused by mutations in genes that affect the normal functioning of the body."},
+    {"id": "14-34", "q": "What is 'homozygous dominant'?", "choices": ["Having two identical dominant alleles for a gene", "Having two different alleles for a gene", "Having two identical recessive alleles for a gene", "Having one dominant allele and one recessive allele"], "ans": 0, "explain": "Homozygous dominant refers to having two identical dominant alleles for a gene, resulting in the expression of the dominant trait."},
+    {"id": "14-35", "q": "What is the role of 'DNA ligase'?", "choices": ["To join DNA fragments together", "To break down DNA during replication", "To synthesize RNA", "To unwind DNA during transcription"], "ans": 0, "explain": "DNA ligase is an enzyme that joins DNA fragments together, playing a key role in DNA replication and repair."},
+    {"id": "14-36", "q": "What is a 'genetic mutation'?", "choices": ["A permanent change in the DNA sequence", "The copying of DNA into RNA", "A change in the size of chromosomes", "A random change in the environment"], "ans": 0, "explain": "A genetic mutation is a permanent alteration in the DNA sequence that makes up a gene, which can lead to a change in the gene's function."},
+    {"id": "14-37", "q": "What is the term 'inversion mutation'?", "choices": ["A segment of a chromosome is reversed", "A gene is deleted", "A gene is duplicated", "A chromosome is split"], "ans": 0, "explain": "An inversion mutation occurs when a segment of a chromosome is reversed, which can affect gene expression."},
+    {"id": "14-38", "q": "What is the 'genetic code'?", "choices": ["The set of instructions that determines how proteins are made", "The process of copying DNA", "The set of chromosomes in a cell", "The number of genes in a cell"], "ans": 0, "explain": "The genetic code refers to the set of rules by which the sequence of nucleotides in a gene is translated into the amino acid sequence of a protein."},
+    {"id": "14-39", "q": "What does 'mosaicism' mean in genetics?", "choices": ["A condition where an individual has two or more genetically distinct cell populations", "A condition where all cells have the same genotype", "A genetic condition caused by a point mutation", "A condition caused by the loss of a chromosome"], "ans": 0, "explain": "Mosaicism occurs when an individual has two or more genetically distinct cell populations, typically due to a mutation during early development."},
+    {"id": "14-40", "q": "What is a 'genetic linkage'?", "choices": ["The tendency for genes located close together on the same chromosome to be inherited together", "The process by which genes mutate", "The distance between genes on chromosomes", "The interaction between multiple genes in a trait"], "ans": 0, "explain": "Genetic linkage refers to the tendency for genes located close together on the same chromosome to be inherited together."},
+    {"id": "14-41", "q": "What is the role of 'RNA polymerase'?", "choices": ["To synthesize RNA from a DNA template", "To repair DNA", "To replicate DNA", "To bind proteins to DNA"], "ans": 0, "explain": "RNA polymerase is an enzyme that synthesizes RNA by transcribing it from a DNA template during the process of transcription."},
+    {"id": "14-42", "q": "What does 'chromosomal translocation' mean?", "choices": ["The exchange of genetic material between non-homologous chromosomes", "The duplication of a chromosome", "The deletion of a gene", "The rearrangement of genes within a chromosome"], "ans": 0, "explain": "Chromosomal translocation occurs when a segment of one chromosome is exchanged with a segment from another non-homologous chromosome."},
+    {"id": "14-43", "q": "What is 'epigenetics'?", "choices": ["The study of changes in gene expression without changes in the DNA sequence", "The study of genetic mutations", "The study of inherited traits", "The study of chromosomal disorders"], "ans": 0, "explain": "Epigenetics involves the study of changes in gene expression or cellular phenotype without alterations to the underlying DNA sequence."},
+    {"id": "14-44", "q": "What is 'gene therapy'?", "choices": ["The treatment of diseases by altering genes", "The study of gene expression", "The analysis of genetic mutations", "The cloning of genes"], "ans": 0, "explain": "Gene therapy involves the introduction, removal, or alteration of genetic material within a person’s cells to treat or prevent disease."},
+    {"id": "14-45", "q": "What is 'somatic mutation'?", "choices": ["A mutation that occurs in non-reproductive cells", "A mutation that is inherited", "A mutation that occurs in the reproductive cells", "A mutation that affects the environment"], "ans": 0, "explain": "Somatic mutations occur in non-reproductive cells and are not passed on to offspring, unlike germline mutations."},
+    {"id": "14-46", "q": "What does 'genetic recombination' refer to?", "choices": ["The exchange of genetic material between homologous chromosomes", "The repair of genetic mutations", "The duplication of genetic sequences", "The replication of DNA"], "ans": 0, "explain": "Genetic recombination refers to the process where genetic material is exchanged between homologous chromosomes, increasing genetic diversity."},
+    {"id": "14-47", "q": "What is the role of 'telomerase'?", "choices": ["To maintain the length of telomeres", "To synthesize DNA", "To replicate RNA", "To repair mutations in the DNA"], "ans": 0, "explain": "Telomerase is an enzyme that adds repetitive nucleotide sequences to the ends of chromosomes, maintaining the length of telomeres."},
+    {"id": "14-48", "q": "What is the 'p53 gene'?", "choices": ["A tumor suppressor gene", "A gene that causes cancer", "A gene responsible for aging", "A gene involved in DNA replication"], "ans": 0, "explain": "The p53 gene is a tumor suppressor gene that helps prevent cancer by regulating cell division and apoptosis."},
+    {"id": "14-49", "q": "What is a 'haplotype'?", "choices": ["A group of genes inherited together", "A type of genetic mutation", "A type of chromosomal disorder", "A rare gene"], "ans": 0, "explain": "A haplotype is a group of genes located close together on a chromosome that are often inherited together."},
+    {"id": "14-50", "q": "What is the process of 'genetic drift'?", "choices": ["The random change in allele frequencies in a population", "The transfer of genetic material between populations", "The adaptation of a species to its environment", "The mutation of genes in a population"], "ans": 0, "explain": "Genetic drift is the random change in allele frequencies in a population, which can lead to the reduction of genetic variation."} ],
+  }
+};
+
+let usedQuestions = {
+  "1": [],
+  "2": [],
+  "3": [],
+  "4": [],
+  "5": [],
+  "6": [],
+  "7": [],
+  "8": [],
+  "9": [],
+  "10": [],
+  "11": [],
+  "12": [],
+  "13": [],
+  "14": [],
+  // Initialize for other lectures if needed
+};
+
+const lectureSelect = document.getElementById('lectureSelect');
+const quizArea = document.getElementById('quizArea');
+const startBtn = document.getElementById('startBtn');
+const scoreBtn = document.getElementById('scoreBtn');
+const resetBtn = document.getElementById('resetBtn');
+const exportBtn = document.getElementById('exportBtn');
+const summary = document.getElementById('summary');
+
+// Populating lecture selection dropdown
+for (let i = 1; i <= 15; i++) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `Lecture ${i} — ${config.lectureCounts[i] || 0} q`;
+  lectureSelect.appendChild(opt);
+}
+
+let userAnswers = {};
+
+function shuffleArray(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getRandomQuestions(lecture) {
+  const allQuestions = config.questions[lecture] || [];
+  let availableQuestions = allQuestions.filter(q => !usedQuestions[lecture].includes(q.id));
+  if (availableQuestions.length === 0) {
+    usedQuestions[lecture] = [];
+    availableQuestions = allQuestions.slice();
+  }
+
+  const selectedQuestions = shuffleArray(availableQuestions).slice(0, config.lectureCounts[lecture]);
+  selectedQuestions.forEach(q => usedQuestions[lecture].push(q.id));
+  return selectedQuestions;
+}
+
+function renderLecture(lec) {
+  quizArea.innerHTML = '';
+  summary.style.display = 'none';
+  userAnswers = {};
+  const questions = getRandomQuestions(lec);
+  questions.forEach((it, idx) => {
+    const el = document.createElement('div');
+    el.className = 'question';
+    el.innerHTML = `<div><span class="lecture-badge">Lecture ${lec}</span> <strong>Q${idx + 1}:</strong> ${it.q}</div>`;
+    const choicesWrap = document.createElement('div');
+    choicesWrap.className = 'choices';
+
+    const choiceObjs = it.choices.map((c, i) => ({ text: c, origIndex: i }));
+    shuffleArray(choiceObjs);
+    
+    choiceObjs.forEach((cobj, ci) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.innerHTML = `${String.fromCharCode(65 + ci)}. ${cobj.text}`;
+
+      btn.addEventListener('click', () => {
+        if (el.dataset.answered) return;
+        el.dataset.answered = '1';
+        const correct = (cobj.origIndex === it.ans);
+        btn.classList.add(correct ? 'correct' : 'wrong');
+
+        const explainDiv = document.createElement('div');
+        explainDiv.className = 'explain';
+        explainDiv.innerHTML = `<strong>${correct ? 'Correct' : 'Incorrect'}</strong> — ${it.explain || ''}`;
+
+        choicesWrap.querySelectorAll('button').forEach(b => b.disabled = true);
+        choicesWrap.appendChild(explainDiv);
+
+        userAnswers[it.id] = correct;
+      });
+
+      choicesWrap.appendChild(btn);
+    });
+
+    el.appendChild(choicesWrap);
+    quizArea.appendChild(el);
+  });
+}
+
+startBtn.addEventListener('click', () => { renderLecture(lectureSelect.value); });
+
+scoreBtn.addEventListener('click', () => {
+  const total = Object.keys(userAnswers).length;
+  const correct = Object.values(userAnswers).filter(v => v).length;
+  summary.style.display = 'block';
+  summary.innerHTML = `<strong>Score:</strong> ${correct}/${config.lectureCounts[lectureSelect.value] || total}`;
+});
+
+resetBtn.addEventListener('click', () => { quizArea.innerHTML = ''; summary.style.display = 'none'; userAnswers = {}; });
+
+exportBtn.addEventListener('click', () => {
+  const data = { lecture: +lectureSelect.value, answers: userAnswers };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `lecture-${lectureSelect.value}-answers.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
