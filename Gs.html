@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Interactive Gender and Society Quiz</title>
+  <style>
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Arial;
+      margin: 18px;
+      background: #004d1a;
+      color: #f5f5f5;
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 18px;
+      border-radius: 10px;
+      box-shadow: 0 6px 24px rgba(2,6,23,0.08);
+      position: relative;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0 0 8px;
+      color: #004d1a;
+      font-weight: bold;
+    }
+    .header {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .college-name {
+      font-size: 32px;
+      font-weight: bold;
+      color: #004d1a;
+      margin-left: 10px;
+      display: inline-block;
+    }
+    .logo-right {
+      width: 100px;
+    }
+    .logo-right img {
+      width: 100%;
+      height: auto;    
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .controls select,
+    .controls button {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #004d1a;
+      cursor: pointer;
+    }
+    .controls select {
+      background: #eef2ff;
+    }
+    .controls button {
+      background: #004d1a;
+      color: white;
+    }
+    .controls button:hover {
+      background: #2e7d32;
+    }
+    .question {
+      border: 1px solid #004d1a;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background-color: #f1f5f9;
+      color: black;
+    }
+    .choices button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 8px;
+      margin: 6px 0;
+      border-radius: 6px;
+      border: 1px solid #dfe9f5;
+      background: #ffffff;
+    }
+    .choices button.correct {
+      border-color: #2f9e44;
+      background: rgba(47,158,68,0.08);
+    }
+    .choices button.wrong {
+      border-color: #e03131;
+      background: rgba(224,49,49,0.06);
+    }
+    .explain {
+      font-size: 13px;
+      padding: 8px;
+      margin-top: 6px;
+      background: #fbfbff;
+      border-left: 4px solid #cfe3ff;
+      border-radius: 6px;
+    }
+    footer {
+      margin-top: 12px;
+      text-align: right;
+      color: #004d1a;
+    }
+    .small {
+      font-size: 13px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <audio id="correct-sound" src="https://raw.githubusercontent.com/amazaregelcesar-dotcom/QUIZ-/main/audio/ding-sound.mp3" preload=""></audio>
+  
+  <div class="container">
+    <div class="header">
+      <img class="logo-right" src="https://github.com/amazaregelcesar-dotcom/QUIZ-/blob/main/Image/3520668.jpg?raw=true" alt="Velez College Logo" />
+      <span class="college-name">VELEZ COLLEGE</span>
+    </div>
+    <h1>Interactive Gender and Society Quiz</h1>
+    <div class="small">Assumptions: Topics 1–4 → 15 questions each.</div>
+
+    <div class="controls">
+      <select id="lectureSelect">
+        <option value="1">Topic 1: Gender-Based Violence (GBV)</option>
+        <option value="2">Topic 2: Sexual Harassment</option>
+        <option value="3">Topic 3: Women and the Law</option>
+        <option value="4">Topic 4: LGBTQ+ Rights and Discrimination</option>
+      </select>
+      <button class="btn primary" id="startBtn">Start / Show Questions</button>
+      <button class="btn" id="scoreBtn">Score</button>
+      <button class="btn ghost" id="resetBtn">Reset</button>
+      <button class="btn" id="exportBtn">Export answers (JSON)</button>
+    </div>
+
+    <div id="quizArea"></div>
+  </div>
+
+<script>
+const correctSound = document.getElementById('correct-sound');
+
+correctSound.addEventListener('canplaythrough', () => {
+  // Ready to play
+});
+
+correctSound.addEventListener('canplaythrough', () => {
+  // Ready to play
+});
+
+const config = { 
+  lectureCounts: { 1: 15, 2: 15, 3: 15, 4: 15 },
+  
+  questions: {
+    "1": [
+      {id: "1-1", q: "What is the definition of Gender-Based Violence (GBV)?", choices: ["Harm inflicted based on gender differences", "Harm inflicted based on race differences", "Harm inflicted based on age differences", "Harm inflicted based on income differences"], ans: 0, explain: "GBV is harm inflicted based on socially ascribed gender differences."},
+      {id: "1-2", q: "Which of the following is a form of GBV experienced by women and girls?", choices: ["Marital rape", "Male circumcision", "Political violence", "Religious discrimination"], ans: 0, explain: "Marital rape is a form of intimate partner violence, part of GBV."},
+      {id: "1-3", q: "Which of the following is NOT a health consequence of GBV?", choices: ["Unwanted pregnancies", "Mental health issues like anxiety and depression", "Improved sexual health", "Sexually transmitted infections (STIs)"], ans: 2, explain: "GBV results in severe physical, psychological, and sexual health consequences, not improved sexual health."},
+      {id: "1-4", q: "What is the preferred term for a person who has lived through an incident of gender-based violence?", choices: ["Victim", "Survivor", "Offender", "Witness"], ans: 1, explain: "The preferred term is 'Survivor,' which emphasizes resilience."},
+      {id: "1-5", q: "What is one of the social consequences of GBV?", choices: ["Improved family bonding", "Family stigmatization", "Better community cooperation", "Economic advancement"], ans: 1, explain: "GBV leads to social consequences like family stigmatization."},
+      {id: "1-6", q: "Which is a key principle related to human rights in addressing GBV?", choices: ["Only men have human rights", "Prevention and response to GBV is linked to protecting human rights", "Human rights violations are only legal matters", "GBV is not a human rights issue"], ans: 1, explain: "GBV is a violation of human rights, so addressing it is tied to human rights protection."},
+      {id: "1-7", q: "What is an example of economic consequences of GBV?", choices: ["Increased public health costs", "Improved labor market participation", "Reduced childcare costs", "Increased economic output"], ans: 0, explain: "The economic consequences of GBV include increased costs to public health systems."},
+      {id: "1-8", q: "Which of the following is NOT a type of GBV?", choices: ["Sexual harassment in the workplace", "Forced marriage", "Dowry-related violence", "Higher education access for women"], ans: 3, explain: "Higher education access for women is a positive right, not a form of GBV."},
+      {id: "1-9", q: "What is the role of the perpetrator in GBV?", choices: ["They are the survivors", "They are responsible for the violence", "They are only witnesses", "They are victims of the violence"], ans: 1, explain: "Perpetrators are responsible for causing the violence."},
+      {id: "1-10", q: "Which of these is NOT a type of GBV?", choices: ["Sexual harassment in the workplace", "Forced marriage", "Domestic violence", "Educational discrimination"], ans: 3, explain: "Educational discrimination is not a direct form of GBV."},
+      {id: "1-11", q: "What is a common consequence of sexual violence in GBV?", choices: ["Increased social standing", "Reduced mental health issues", "Mental health and psychosocial effects such as depression and PTSD", "Improved self-esteem"], ans: 2, explain: "Sexual violence leads to serious mental health effects, including PTSD."},
+      {id: "1-12", q: "What does GBV include?", choices: ["Only physical violence", "Physical, sexual, and psychological harm", "Only sexual harm", "Psychological abuse only"], ans: 1, explain: "GBV involves physical, sexual, and psychological harm."},
+      {id: "1-13", q: "What is the global nature of GBV?", choices: ["It is limited to certain regions", "It only affects women in third-world countries", "It is a widespread human rights issue across the world", "It does not affect men"], ans: 2, explain: "GBV is a global issue, affecting both men and women."},
+      {id: "1-14", q: "What is the preferred term for a person who has lived through an incident of gender-based violence?", choices: ["Victim", "Survivor", "Offender", "Witness"], ans: 1, explain: "The term 'Survivor' emphasizes resilience after experiencing GBV."},
+      {id: "1-15", q: "What is the definition of GBV?", choices: ["Harm inflicted based on gender differences", "Harm inflicted based on race differences", "Harm inflicted based on age differences", "Harm inflicted based on income differences"], ans: 0, explain: "GBV refers to harm based on gender differences."},
+      {id: "1-1", q: "What is the definition of Gender-Based Violence (GBV)?", choices: ["Harm inflicted based on gender differences", "Harm inflicted based on race differences", "Harm inflicted based on age differences", "Harm inflicted based on income differences"], ans: 0, explain: "GBV is harm inflicted based on socially ascribed gender differences."},
+  {id: "1-2", q: "Which of the following is a form of GBV experienced by women and girls?", choices: ["Marital rape", "Male circumcision", "Political violence", "Religious discrimination"], ans: 0, explain: "Marital rape is a form of intimate partner violence, part of GBV."},
+  {id: "1-3", q: "Which of the following is NOT a health consequence of GBV?", choices: ["Unwanted pregnancies", "Mental health issues like anxiety and depression", "Improved sexual health", "Sexually transmitted infections (STIs)"], ans: 2, explain: "GBV results in severe physical, psychological, and sexual health consequences, not improved sexual health."},
+  {id: "1-4", q: "What is the preferred term for a person who has lived through an incident of gender-based violence?", choices: ["Victim", "Survivor", "Offender", "Witness"], ans: 1, explain: "The preferred term is 'Survivor,' which emphasizes resilience."},
+  {id: "1-5", q: "What is one of the social consequences of GBV?", choices: ["Improved family bonding", "Family stigmatization", "Better community cooperation", "Economic advancement"], ans: 1, explain: "GBV leads to social consequences like family stigmatization."},
+  {id: "1-6", q: "Which of the following is NOT a type of GBV?", choices: ["Sexual harassment in the workplace", "Forced marriage", "Dowry-related violence", "Higher education access for women"], ans: 3, explain: "Higher education access for women is a positive right, not a form of GBV."},
+  {id: "1-7", q: "What are the economic consequences of GBV?", choices: ["Increased public health costs", "Improved labor market participation", "Reduced childcare costs", "Increased economic output"], ans: 0, explain: "The economic consequences of GBV include increased costs to public health systems."},
+  {id: "1-8", q: "What does the cycle of violence in intimate partner relationships refer to?", choices: ["A continuous loop of abusive behavior followed by calm", "A one-time occurrence", "Victims who enjoy the violence", "Perpetrators seeking counseling"], ans: 0, explain: "The cycle involves recurring abusive behavior, often followed by a calm period, then repeating."},
+  {id: "1-9", q: "What type of violence is NOT included in the definition of GBV?", choices: ["Physical violence", "Psychological violence", "Economic violence", "Political violence"], ans: 3, explain: "Political violence is generally not categorized under GBV, though it can overlap."},
+  {id: "1-10", q: "What is one way to stop the cycle of violence?", choices: ["Social programs and early intervention", "Legal punishment for perpetrators only", "Ignoring it until it goes away", "Increasing violence to deter behavior"], ans: 0, explain: "Social programs and early intervention can help stop the cycle."},
+  {id: "1-11", q: "What is the human rights perspective on GBV?", choices: ["GBV violates a person's fundamental human rights", "GBV is only a legal issue", "GBV is a private matter and should be handled privately", "GBV does not affect human rights"], ans: 0, explain: "GBV is a violation of human rights, requiring a human rights-based approach."},
+  {id: "1-12", q: "Which of the following is an example of sexual violence?", choices: ["Marital rape", "Forced marriage", "Battering by a partner", "Trafficking for labor"], ans: 0, explain: "Marital rape is an example of sexual violence."},
+  {id: "1-13", q: "How does GBV affect children?", choices: ["It has no effect on children", "It can lead to developmental delays and emotional trauma", "Children benefit from witnessing violence", "Children become more resilient"], ans: 1, explain: "Children exposed to GBV often suffer from emotional and developmental harm."},
+  {id: "1-14", q: "What is a commonly observed mental health consequence of GBV?", choices: ["Increased confidence", "Anxiety, PTSD, depression", "Enhanced social integration", "Increased motivation to work"], ans: 1, explain: "GBV often leads to mental health consequences like anxiety and PTSD."},
+  {id: "1-15", q: "How can communities respond to GBV?", choices: ["Educating and raising awareness about the issue", "Ignoring the issue", "Encouraging victims to stay silent", "Isolating the victims"], ans: 0, explain: "Communities should engage in education and awareness programs to address GBV."},
+    
+    ],
+    "2": [
+      {id: "2-1", q: "What is the definition of sexual harassment under the Anti-Sexual Harassment Act of 1995?", choices: ["Any unwelcome sexual advance in a work or educational setting", "Any consensual sexual act", "Any verbal compliment", "Any romantic relationship at work"], ans: 0, explain: "Sexual harassment is an unwelcome sexual advance or request in work or educational settings."},
+      {id: "2-2", q: "Which of the following is NOT a form of sexual harassment?", choices: ["Physical harassment", "Verbal harassment", "Economic harassment", "Lurid remarks"], ans: 2, explain: "Economic harassment is not typically considered a form of sexual harassment."},
+      {id: "2-3", q: "What is one key aspect of sexual harassment in the workplace?", choices: ["The behavior is always accepted by the victim", "It is based on an unequal power relationship", "It is always reported immediately", "It is always gender-neutral"], ans: 1, explain: "Sexual harassment is based on an unequal power relationship."},
+      {id: "2-4", q: "In the Philippines, which law governs sexual harassment in educational and work environments?", choices: ["The Magna Carta of Women", "Republic Act No. 7877", "The Labor Code", "The Anti-VAWC Act"], ans: 1, explain: "Republic Act No. 7877 governs sexual harassment in educational and work environments."},
+      {id: "2-5", q: "What theory links sexual harassment to the dominance of men over women in society?", choices: ["Sex Role Spillover Theory", "Feminist Theory", "Socio-Cultural Theory", "Natural Theory"], ans: 1, explain: "Feminist Theory connects sexual harassment to male dominance in society."},
+      {id: "2-6", q: "Which of the following is NOT a typical action of perpetrators of sexual harassment?", choices: ["Making sexual advances", "Offering promotions for sexual favors", "Offering verbal sexual compliments", "Giving support to victims"], ans: 3, explain: "Perpetrators do not typically offer support to victims."},
+      {id: "2-7", q: "Which of the following is a form of verbal sexual harassment?", choices: ["Requests for sexual favors", "Physical assault", "Offering promotions", "Encouraging teamwork"], ans: 0, explain: "Verbal sexual harassment includes requests for sexual favors or lurid remarks."},
+      {id: "2-8", q: "What does the organizational theory of sexual harassment focus on?", choices: ["Biological urges", "Gender-based expectations in families", "The abuse of power in organizational structures", "Women's roles in the workplace"], ans: 2, explain: "Organizational theory focuses on power imbalances in work environments that lead to harassment."},
+      {id: "2-9", q: "Which of the following behaviors is considered sexual harassment in educational institutions?", choices: ["Offering career advice", "Demanding sexual favors for academic benefits", "Complimenting a student's appearance", "Encouraging teamwork"], ans: 1, explain: "Demanding sexual favors for academic benefits constitutes sexual harassment."},
+      {id: "2-10", q: "Which of the following laws protects against sexual harassment in government offices?", choices: ["Civil Service Commission No. 01-0940", "The Philippine Plan for Gender Responsive Development", "The Anti-Sexual Harassment Act", "The Child Protection Policy"], ans: 0, explain: "Civil Service Commission No. 01-0940 outlines rules for preventing sexual harassment in government offices."},
+      {id: "2-11", q: "What theory explains sexual harassment by viewing it as a product of gender inequality in society?", choices: ["Sex Role Spillover Theory", "Natural/Biological Theory", "Socio-Cultural Theory", "Feminist Theory"], ans: 2, explain: "Socio-Cultural Theory connects sexual harassment to societal gender inequality."},
+      {id: "2-12", q: "What behavior does the Sex Role Spillover Theory suggest leads to sexual harassment in the workplace?", choices: ["The assumption that women belong in traditional roles", "Men perceiving women as sexual objects", "Gender-based power imbalances", "Women's use of sexual behavior in the workplace"], ans: 0, explain: "Sex Role Spillover Theory suggests that gender expectations spill over into workplace behavior."},
+      {id: "2-13", q: "What is the main focus of the Natural/Biological Theory of sexual harassment?", choices: ["The biological drives of men", "The emotional responses of victims", "The unequal legal protections", "Gendered work roles"], ans: 0, explain: "Natural/Biological Theory attributes sexual harassment to biological drives."},
+      {id: "2-14", q: "Which law mandates sexual harassment laws in the Philippines?", choices: ["The Anti-Sexual Harassment Act of 1995", "The Anti-VAWC Law", "The Magna Carta of Women", "The Labor Code"], ans: 0, explain: "The Anti-Sexual Harassment Act of 1995 addresses sexual harassment laws."},
+      {id: "2-15", q: "What is the primary concern of the Anti-Sexual Harassment Act of 1995?", choices: ["To prevent verbal insults in the workplace", "To punish the act of bullying", "To protect individuals from sexual harassment in work or educational settings", "To promote gender equality in political offices"], ans: 2, explain: "The act aims to protect individuals from sexual harassment in work or educational environments."},
+    {id: "2-1", q: "What is the definition of sexual harassment under the Anti-Sexual Harassment Act of 1995?", choices: ["Any unwelcome sexual advance in a work or educational setting", "Any consensual sexual act", "Any verbal compliment", "Any romantic relationship at work"], ans: 0, explain: "Sexual harassment is an unwelcome sexual advance or request in work or educational settings."},
+  {id: "2-2", q: "Which of the following is NOT a form of sexual harassment?", choices: ["Physical harassment", "Verbal harassment", "Economic harassment", "Lurid remarks"], ans: 2, explain: "Economic harassment is not typically considered a form of sexual harassment."},
+  {id: "2-3", q: "What is one key aspect of sexual harassment in the workplace?", choices: ["The behavior is always accepted by the victim", "It is based on an unequal power relationship", "It is always reported immediately", "It is always gender-neutral"], ans: 1, explain: "Sexual harassment is based on an unequal power relationship."},
+  {id: "2-4", q: "In the Philippines, which law governs sexual harassment in educational and work environments?", choices: ["The Magna Carta of Women", "Republic Act No. 7877", "The Labor Code", "The Anti-VAWC Act"], ans: 1, explain: "Republic Act No. 7877 governs sexual harassment in educational and work environments."},
+  {id: "2-5", q: "What theory links sexual harassment to the dominance of men over women in society?", choices: ["Sex Role Spillover Theory", "Feminist Theory", "Socio-Cultural Theory", "Natural Theory"], ans: 1, explain: "Feminist Theory connects sexual harassment to male dominance in society."},
+  {id: "2-6", q: "Which of the following is NOT a typical action of perpetrators of sexual harassment?", choices: ["Making sexual advances", "Offering promotions for sexual favors", "Offering verbal sexual compliments", "Giving support to victims"], ans: 3, explain: "Perpetrators do not typically offer support to victims."},
+  {id: "2-7", q: "Which of the following is a form of verbal sexual harassment?", choices: ["Requests for sexual favors", "Physical assault", "Offering promotions", "Encouraging teamwork"], ans: 0, explain: "Verbal sexual harassment includes requests for sexual favors or lurid remarks."},
+  {id: "2-8", q: "What does the organizational theory of sexual harassment focus on?", choices: ["Biological urges", "Gender-based expectations in families", "The abuse of power in organizational structures", "Women's roles in the workplace"], ans: 2, explain: "Organizational theory focuses on power imbalances in work environments that lead to harassment."},
+  {id: "2-9", q: "Which of the following behaviors is considered sexual harassment in educational institutions?", choices: ["Offering career advice", "Demanding sexual favors for academic benefits", "Complimenting a student's appearance", "Encouraging teamwork"], ans: 1, explain: "Demanding sexual favors for academic benefits constitutes sexual harassment."},
+  {id: "2-10", q: "Which of the following laws protects against sexual harassment in government offices?", choices: ["Civil Service Commission No. 01-0940", "The Philippine Plan for Gender Responsive Development", "The Anti-Sexual Harassment Act", "The Child Protection Policy"], ans: 0, explain: "Civil Service Commission No. 01-0940 outlines rules for preventing sexual harassment in government offices."},
+  {id: "2-11", q: "What theory explains sexual harassment by viewing it as a product of gender inequality in society?", choices: ["Sex Role Spillover Theory", "Natural/Biological Theory", "Socio-Cultural Theory", "Feminist Theory"], ans: 2, explain: "Socio-Cultural Theory connects sexual harassment to societal gender inequality."},
+  {id: "2-12", q: "What behavior does the Sex Role Spillover Theory suggest leads to sexual harassment in the workplace?", choices: ["The assumption that women belong in traditional roles", "Men perceiving women as sexual objects", "Gender-based power imbalances", "Women's use of sexual behavior in the workplace"], ans: 0, explain: "Sex Role Spillover Theory suggests that gender expectations spill over into workplace behavior."},
+  {id: "2-13", q: "What is the main focus of the Natural/Biological Theory of sexual harassment?", choices: ["The biological drives of men", "The emotional responses of victims", "The unequal legal protections", "Gendered work roles"], ans: 0, explain: "Natural/Biological Theory attributes sexual harassment to biological drives."},
+  {id: "2-14", q: "Which law mandates sexual harassment laws in the Philippines?", choices: ["The Anti-Sexual Harassment Act of 1995", "The Anti-VAWC Law", "The Magna Carta of Women", "The Labor Code"], ans: 0, explain: "The Anti-Sexual Harassment Act of 1995 addresses sexual harassment laws."},
+  {id: "2-15", q: "What is the primary concern of the Anti-Sexual Harassment Act of 1995?", choices: ["To prevent verbal insults in the workplace", "To punish the act of bullying", "To protect individuals from sexual harassment in work or educational settings", "To promote gender equality in political offices"], ans: 2, explain: "The act aims to protect individuals from sexual harassment in work or educational environments."}
+  
+    ],
+      "3": [
+      {id: "3-1", q: "What does the 1987 Philippine Constitution say about gender equality?", choices: ["Women are not protected under the law", "The State recognizes the role of women in nation-building and ensures gender equality before the law", "Gender equality applies only to men", "Women have no rights under the Constitution"], ans: 1, explain: "The Constitution ensures gender equality and recognizes women's role in nation-building."},
+      {id: "3-2", q: "Which law promotes the integration of women as equal partners in development and nation-building?", choices: ["The Labor Code", "The Magna Carta of Women", "Republic Act 7192 (Women in Nation Building Law)", "Anti-Sexual Harassment Law"], ans: 2, explain: "Republic Act 7192 promotes women's integration as equal partners in development."},
+      {id: "3-3", q: "What is the key provision of the Magna Carta of Women (Republic Act 9710)?", choices: ["Women should be paid more than men", "Women are provided with equal rights in political participation", "Women are guaranteed protection in the workplace from sexual harassment", "Women are entitled to 50% of government resources"], ans: 1, explain: "The Magna Carta guarantees equal rights for women in political participation."},
+      {id: "3-4", q: "Which of the following laws protects working women by ensuring safe working conditions?", choices: ["The Magna Carta of Women", "The 1987 Constitution", "The Labor Code of the Philippines", "Republic Act 7192"], ans: 2, explain: "The Labor Code ensures safe and healthful working conditions for women."},
+      {id: "3-5", q: "Which law gives women the right to own land in the Philippines?", choices: ["Comprehensive Agrarian Reform Law (RA 7881)", "Magna Carta of Women (RA 9710)", "Republic Act 8353 (Anti-Rape Law)", "1988 Comprehensive Agrarian Reform Law"], ans: 3, explain: "The 1988 Comprehensive Agrarian Reform Law grants Filipino women the right to own land."},
+      {id: "3-6", q: "What is the purpose of the Gender and Development Budget (GAD)?", choices: ["To allocate funds for women's health", "To promote gender equality through government budgeting", "To support male-dominated industries", "To fund education for women only"], ans: 1, explain: "The GAD aims to institutionalize gender equality through budgeting."},
+      {id: "3-7", q: "Which law mandates that a portion of government funds be allocated to women's programs?", choices: ["Women in Nation Building Law (RA 7192)", "The Labor Code", "The Anti-Sexual Harassment Act", "The Magna Carta of Women"], ans: 0, explain: "Republic Act 7192 mandates funds to support women's programs."},
+      {id: "3-8", q: "Which law addresses sexual harassment in education or training environments?", choices: ["Republic Act 7877", "Republic Act 8353", "The Anti-VAWC Act", "The Magna Carta of Women"], ans: 0, explain: "Republic Act 7877 governs sexual harassment in education and training settings."},
+      {id: "3-9", q: "Which program in the Philippines ensures women's participation in governance?", choices: ["Women in Nation Building Program", "Philippine Plan for Gender Responsive Development", "Anti-Sexual Harassment Program", "Child Protection Policy"], ans: 1, explain: "The Philippine Plan for Gender Responsive Development promotes women's participation in governance."},
+      {id: "3-10", q: "What does the Labor Code of the Philippines prohibit?", choices: ["The employment of women in night shifts", "Gender-based discrimination in employment", "Gender-based educational discrimination", "Women's right to vote"], ans: 1, explain: "The Labor Code prohibits gender-based discrimination in employment."},
+      {id: "3-11", q: "Which law guarantees equal representation for women in political offices in the Philippines?", choices: ["Magna Carta of Women", "The Anti-Sexual Harassment Law", "Party List Law", "Women in Nation Building Law"], ans: 2, explain: "The Party List Law guarantees women's equal representation in political offices."},
+      {id: "3-12", q: "What type of violence does Republic Act 8353 (Anti-Rape Law) primarily address?", choices: ["Physical violence", "Psychological violence", "Sexual violence", "Economic violence"], ans: 2, explain: "The Anti-Rape Law specifically addresses sexual violence."},
+      {id: "3-13", q: "Which law defines and penalizes the crime of sexual harassment in the Philippines?", choices: ["Republic Act 8353", "Republic Act 7877", "The Labor Code", "The Magna Carta of Women"], ans: 1, explain: "Republic Act 7877 defines and penalizes sexual harassment in work and education settings."},
+      {id: "3-14", q: "Which law gave Filipino women the right to own land?", choices: ["The Magna Carta of Women", "Republic Act 7881", "1988 Comprehensive Agrarian Reform Law", "The Anti-Sexual Harassment Act"], ans: 2, explain: "The 1988 Comprehensive Agrarian Reform Law allows women to own land."},
+      {id: "3-15", q: "Which law mandates womens representation in national programs?", choices: ["Anti-VAWC Act", "The Magna Carta of Women", "Party List Law", "The Labor Code"], ans: 1, explain: "The Magna Carta of Women mandates women's representation in national programs."},
+        {id: "3-1", q: "What does the 1987 Philippine Constitution say about gender equality?", choices: ["Women are not protected under the law", "The State recognizes the role of women in nation-building and ensures gender equality before the law", "Gender equality applies only to men", "Women have no rights under the Constitution"], ans: 1, explain: "The Constitution ensures gender equality and recognizes women's role in nation-building."},
+  {id: "3-2", q: "Which law promotes the integration of women as equal partners in development and nation-building?", choices: ["The Labor Code", "The Magna Carta of Women", "Republic Act 7192 (Women in Nation Building Law)", "Anti-Sexual Harassment Law"], ans: 2, explain: "Republic Act 7192 promotes women's integration as equal partners in development."},
+  {id: "3-3", q: "What is the key provision of the Magna Carta of Women (Republic Act 9710)?", choices: ["Women should be paid more than men", "Women are provided with equal rights in political participation", "Women are guaranteed protection in the workplace from sexual harassment", "Women are entitled to 50% of government resources"], ans: 1, explain: "The Magna Carta guarantees equal rights for women in political participation."},
+  {id: "3-4", q: "Which of the following laws protects working women by ensuring safe working conditions?", choices: ["The Magna Carta of Women", "The 1987 Constitution", "The Labor Code of the Philippines", "Republic Act 7192"], ans: 2, explain: "The Labor Code ensures safe and healthful working conditions for women."},
+  {id: "3-5", q: "Which law gives women the right to own land in the Philippines?", choices: ["Comprehensive Agrarian Reform Law (RA 7881)", "Magna Carta of Women (RA 9710)", "Republic Act 8353 (Anti-Rape Law)", "1988 Comprehensive Agrarian Reform Law"], ans: 3, explain: "The 1988 Comprehensive Agrarian Reform Law grants Filipino women the right to own land."},
+  {id: "3-6", q: "What is the purpose of the Gender and Development Budget (GAD)?", choices: ["To allocate funds for women's health", "To promote gender equality through government budgeting", "To support male-dominated industries", "To fund education for women only"], ans: 1, explain: "The GAD aims to institutionalize gender equality through budgeting."},
+  {id: "3-7", q: "Which law mandates that a portion of government funds be allocated to women's programs?", choices: ["Women in Nation Building Law (RA 7192)", "The Labor Code", "The Anti-Sexual Harassment Act", "The Magna Carta of Women"], ans: 0, explain: "Republic Act 7192 mandates funds to support women's programs."},
+  {id: "3-8", q: "Which law addresses sexual harassment in education or training environments?", choices: ["Republic Act 7877", "Republic Act 8353", "The Anti-VAWC Act", "The Magna Carta of Women"], ans: 0, explain: "Republic Act 7877 governs sexual harassment in education and training settings."},
+  {id: "3-9", q: "Which program in the Philippines ensures women's participation in governance?", choices: ["Women in Nation Building Program", "Philippine Plan for Gender Responsive Development", "Anti-Sexual Harassment Program", "Child Protection Policy"], ans: 1, explain: "The Philippine Plan for Gender Responsive Development promotes women's participation in governance."},
+  {id: "3-10", q: "What does the Labor Code of the Philippines prohibit?", choices: ["The employment of women in night shifts", "Gender-based discrimination in employment", "Gender-based educational discrimination", "Women's right to vote"], ans: 1, explain: "The Labor Code prohibits gender-based discrimination in employment."},
+  {id: "3-11", q: "Which law guarantees equal representation for women in political offices in the Philippines?", choices: ["Magna Carta of Women", "The Anti-Sexual Harassment Law", "Party List Law", "Women in Nation Building Law"], ans: 2, explain: "The Party List Law guarantees women's equal representation in political offices."},
+  {id: "3-12", q: "What type of violence does Republic Act 8353 (Anti-Rape Law) primarily address?", choices: ["Physical violence", "Psychological violence", "Sexual violence", "Economic violence"], ans: 2, explain: "The Anti-Rape Law specifically addresses sexual violence."},
+  {id: "3-13", q: "Which law defines and penalizes the crime of sexual harassment in the Philippines?", choices: ["Republic Act 8353", "Republic Act 7877", "The Labor Code", "The Magna Carta of Women"], ans: 1, explain: "Republic Act 7877 defines and penalizes sexual harassment in work and education settings."},
+  {id: "3-14", q: "Which law gave Filipino women the right to own land?", choices: ["The Magna Carta of Women", "Republic Act 7881", "1988 Comprehensive Agrarian Reform Law", "The Anti-Sexual Harassment Act"], ans: 2, explain: "The 1988 Comprehensive Agrarian Reform Law allows women to own land."},
+  {id: "3-15", q: "Which law mandates women’s representation in national programs?", choices: ["Anti-VAWC Act", "The Magna Carta of Women", "Party List Law", "The Labor Code"], ans: 1, explain: "The Magna Carta of Women mandates women's representation in national programs."}
+    ],
+        "4": [
+      {id: "4-1", q: "What does the term SOGIE stand for?", choices: ["Sexual Orientation, Gender Identity, and Equalities", "Sexual Orientation, Gender Identity, and Education", "Sexual Orientation, Gender Identity, and Expression", "Sexual Observation, Gender Interaction, and Equality"], ans: 2, explain: "SOGIE stands for Sexual Orientation, Gender Identity, and Expression."},
+      {id: "4-2", q: "What is the primary focus of the Anti-Discrimination Bill for LGBTQ+ people?", choices: ["It prohibits discrimination in housing", "It promotes equal rights in employment, education, and public accommodations", "It mandates same-sex marriage", "It enforces gender segregation in public spaces"], ans: 1, explain: "The Anti-Discrimination Bill aims to prevent discrimination based on sexual orientation and gender identity."},
+      {id: "4-3", q: "Which of the following is a key issue faced by the LGBTQ+ community in the Philippines?", choices: ["Equal access to healthcare", "Widespread discrimination and violence", "Equal participation in government", "Universal access to education"], ans: 1, explain: "LGBTQ+ individuals face widespread discrimination and violence."},
+      {id: "4-4", q: "What is the landmark Supreme Court decision that allowed an LGBTQ+ party-list in the Philippines?", choices: ["The Toonen v. Australia Case", "Ang Ladlad LGBT Party vs. Comelec", "Silverio v Republic", "Cagandahan v Republic"], ans: 1, explain: "The Supreme Court ruled in favor of allowing 'Ang Ladlad' to participate in the party-list system."},
+      {id: "4-5", q: "Which Philippine law addresses gender-based bullying in schools?", choices: ["Anti-Sexual Harassment Act", "Child Protection Policy", "Anti-Discrimination Bill", "Anti-Bullying Act of 2013"], ans: 3, explain: "The Anti-Bullying Act of 2013 addresses gender-based bullying in schools."},
+      {id: "4-6", q: "Which of the following Philippine cities has passed anti-discrimination ordinances for LGBTQ+ individuals?", choices: ["Quezon City", "Baguio City", "Davao City", "Taguig City"], ans: 0, explain: "Quezon City passed anti-discrimination ordinances for LGBTQ+ individuals."},
+      {id: "4-7", q: "What is the major focus of the LGBTQ+ movement in the Philippines?", choices: ["Campaigning for political office", "Fighting for legal recognition and rights", "Promoting homophobia", "Encouraging gender-based violence"], ans: 1, explain: "The LGBTQ+ movement focuses on fighting for legal recognition and rights."},
+      {id: "4-8", q: "What is one of the key findings of the 'Trans Murder Monitoring Project' in the Philippines?", choices: ["Decreased rates of violence against transgender individuals", "Limited data on crimes against the LGBTQ+ community", "Increased acceptance of transgender individuals", "Total absence of homophobic violence"], ans: 1, explain: "The project found limited data on crimes against transgender individuals."},
+      {id: "4-9", q: "Which of the following is NOT a characteristic of the 'Ang Ladlad' ruling in 2010?", choices: ["It allowed LGBTQ+ groups to form political parties", "It affirmed LGBTQ+ participation in the party-list system", "It prohibited LGBTQ+ representation in government", "It recognized the importance of LGBTQ+ political participation"], ans: 2, explain: "The ruling recognized the importance of LGBTQ+ political participation."},
+      {id: "4-10", q: "What was one of the main causes of discrimination against LGBTQ+ people in the Philippine military?", choices: ["Gender-neutral policies", "Stereotyping and gendered behavior expectations", "Increased LGBTQ+ inclusion", "Equal treatment of all applicants"], ans: 1, explain: "LGBTQ+ individuals face discrimination due to gendered expectations and stereotypes in the military."},
+      {id: "4-11", q: "What law does the Philippine government rely on for protecting LGBTQ+ youth in schools?", choices: ["Anti-Sexual Harassment Act", "Child Protection Policy", "Gender Equality Act", "Anti-Discrimination Bill"], ans: 1, explain: "The Child Protection Policy guarantees the protection of LGBTQ+ youth in schools."},
+      {id: "4-12", q: "Which of the following is a form of violence or discrimination that LGBTQ+ individuals commonly face?", choices: ["Equal access to government services", "Bullying and harassment based on gender identity", "Widespread acceptance in social institutions", "Equal political representation"], ans: 1, explain: "LGBTQ+ individuals commonly face bullying and harassment based on their gender identity."},
+      {id: "4-13", q: "What is the landmark Supreme Court decision that allowed an LGBTQ+ party-list in the Philippines?", choices: ["The Toonen v. Australia Case", "Ang Ladlad LGBT Party vs. Comelec", "Silverio v Republic", "Cagandahan v Republic"], ans: 1, explain: "The Supreme Court ruled in favor of allowing 'Ang Ladlad' to participate in the party-list system."},
+      {id: "4-14", q: "What does the 2010 Supreme Court ruling on 'Ang Ladlad' recognize?", choices: ["That LGBTQ+ individuals do not have the right to vote", "That LGBTQ+ individuals should be represented in the party-list system", "That LGBTQ+ groups cannot participate in elections", "That LGBTQ+ issues are not recognized in law"], ans: 1, explain: "The ruling affirmed LGBTQ+ participation in the party-list system."},
+      {id: "4-15", q: "What is one of the most common forms of discrimination against LGBTQ+ individuals in the workplace?", choices: ["Exclusion from promotions based on sexual orientation", "Equal pay for equal work", "Providing healthcare benefits for same-sex partners", "Support for gender transition"], ans: 0, explain: "LGBTQ+ individuals often face discrimination in the workplace, including exclusion from promotions."},
+      {id: "4-1", q: "What does the term SOGIE stand for?", choices: ["Sexual Orientation, Gender Identity, and Equalities", "Sexual Orientation, Gender Identity, and Education", "Sexual Orientation, Gender Identity, and Expression", "Sexual Observation, Gender Interaction, and Equality"], ans: 2, explain: "SOGIE stands for Sexual Orientation, Gender Identity, and Expression."},
+  {id: "4-2", q: "What is the primary focus of the Anti-Discrimination Bill for LGBTQ+ people?", choices: ["It prohibits discrimination in housing", "It promotes equal rights in employment, education, and public accommodations", "It mandates same-sex marriage", "It enforces gender segregation in public spaces"], ans: 1, explain: "The Anti-Discrimination Bill aims to prevent discrimination based on sexual orientation and gender identity."},
+  {id: "4-3", q: "Which of the following is a key issue faced by the LGBTQ+ community in the Philippines?", choices: ["Equal access to healthcare", "Widespread discrimination and violence", "Equal participation in government", "Universal access to education"], ans: 1, explain: "LGBTQ+ individuals face widespread discrimination and violence."},
+  {id: "4-4", q: "What is the landmark Supreme Court decision that allowed an LGBTQ+ party-list in the Philippines?", choices: ["The Toonen v. Australia Case", "Ang Ladlad LGBT Party vs. Comelec", "Silverio v Republic", "Cagandahan v Republic"], ans: 1, explain: "The Supreme Court ruled in favor of allowing 'Ang Ladlad' to participate in the party-list system."},
+    {id: "4-5", q: "Which Philippine law addresses gender-based bullying in schools?", choices: ["Anti-Sexual Harassment Act", "Child Protection Policy", "Anti-Discrimination Bill", "Anti-Bullying Act of 2013"], ans: 3, explain: "The Anti-Bullying Act of 2013 addresses gender-based bullying in schools."},
+  {id: "4-6", q: "Which of the following Philippine cities has passed anti-discrimination ordinances for LGBTQ+ individuals?", choices: ["Quezon City", "Baguio City", "Davao City", "Taguig City"], ans: 0, explain: "Quezon City passed anti-discrimination ordinances for LGBTQ+ individuals."},
+  {id: "4-7", q: "What is the major focus of the LGBTQ+ movement in the Philippines?", choices: ["Campaigning for political office", "Fighting for legal recognition and rights", "Promoting homophobia", "Encouraging gender-based violence"], ans: 1, explain: "The LGBTQ+ movement focuses on fighting for legal recognition and rights."},
+  {id: "4-8", q: "What is one of the key findings of the 'Trans Murder Monitoring Project' in the Philippines?", choices: ["Decreased rates of violence against transgender individuals", "Limited data on crimes against the LGBTQ+ community", "Increased acceptance of transgender individuals", "Total absence of homophobic violence"], ans: 1, explain: "The project found limited data on crimes against transgender individuals."},
+  {id: "4-9", q: "Which of the following is NOT a characteristic of the 'Ang Ladlad' ruling in 2010?", choices: ["It allowed LGBTQ+ groups to form political parties", "It affirmed LGBTQ+ participation in the party-list system", "It prohibited LGBTQ+ representation in government", "It recognized the importance of LGBTQ+ political participation"], ans: 2, explain: "The ruling recognized the importance of LGBTQ+ political participation."},
+  {id: "4-10", q: "What was one of the main causes of discrimination against LGBTQ+ people in the Philippine military?", choices: ["Gender-neutral policies", "Stereotyping and gendered behavior expectations", "Increased LGBTQ+ inclusion", "Equal treatment of all applicants"], ans: 1, explain: "LGBTQ+ individuals face discrimination due to gendered expectations and stereotypes in the military."},
+  {id: "4-11", q: "What law does the Philippine government rely on for protecting LGBTQ+ youth in schools?", choices: ["Anti-Sexual Harassment Act", "Child Protection Policy", "Gender Equality Act", "Anti-Discrimination Bill"], ans: 1, explain: "The Child Protection Policy guarantees the protection of LGBTQ+ youth in schools."},
+  {id: "4-12", q: "Which of the following is a form of violence or discrimination that LGBTQ+ individuals commonly face?", choices: ["Equal access to government services", "Bullying and harassment based on gender identity", "Widespread acceptance in social institutions", "Equal political representation"], ans: 1, explain: "LGBTQ+ individuals commonly face bullying and harassment based on their gender identity."},
+  {id: "4-13", q: "What is the landmark Supreme Court decision that allowed an LGBTQ+ party-list in the Philippines?", choices: ["The Toonen v. Australia Case", "Ang Ladlad LGBT Party vs. Comelec", "Silverio v Republic", "Cagandahan v Republic"], ans: 1, explain: "The Supreme Court ruled in favor of allowing 'Ang Ladlad' to participate in the party-list system."},
+  {id: "4-14", q: "What does the 2010 Supreme Court ruling on 'Ang Ladlad' recognize?", choices: ["That LGBTQ+ individuals do not have the right to vote", "That LGBTQ+ individuals should be represented in the party-list system", "That LGBTQ+ groups cannot participate in elections", "That LGBTQ+ issues are not recognized in law"], ans: 1, explain: "The ruling affirmed LGBTQ+ participation in the party-list system."},
+  {id: "4-15", q: "What is one of the most common forms of discrimination against LGBTQ+ individuals in the workplace?", choices: ["Exclusion from promotions based on sexual orientation", "Equal pay for equal work", "Providing healthcare benefits for same-sex partners", "Support for gender transition"], ans: 0, explain: "LGBTQ+ individuals often face discrimination in the workplace, including exclusion from promotions."}
+    ],
+
+  
+  }
+};
+
+let usedQuestions = {
+  "1": [],
+  "2": [],
+  "3": [],
+  "4": [],
+};
+
+const lectureSelect = document.getElementById('lectureSelect');
+const quizArea = document.getElementById('quizArea');
+const startBtn = document.getElementById('startBtn');
+
+function shuffleArray(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderLecture(lec) {
+  quizArea.innerHTML = '';  // Clear previous questions
+  let questions = shuffleArray(config.questions[lec]);  // Shuffle questions for random order
+  let answeredQuestions = [];
+
+  questions.forEach((it, idx) => {
+    const el = document.createElement('div');
+    el.className = 'question';
+    el.innerHTML = `<div><span class="lecture-badge">Topic ${lec}</span> <strong>Q${idx + 1}:</strong> ${it.q}</div>`;
+
+    const choicesWrap = document.createElement('div');
+    choicesWrap.className = 'choices';
+
+    it.choices.forEach((choice, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.innerHTML = `${String.fromCharCode(65 + i)}. ${choice}`;
+
+      btn.addEventListener('click', () => {
+        if (el.dataset.answered) return;
+        el.dataset.answered = '1';
+
+        // Check the answer and provide feedback
+        const correct = (i === it.ans);
+        btn.classList.add(correct ? 'correct' : 'wrong');
+        const explainDiv = document.createElement('div');
+        explainDiv.className = 'explain';
+        explainDiv.innerHTML = `<strong>${correct ? 'Correct' : 'Incorrect'}</strong> — ${it.explain || ''}`;
+        choicesWrap.querySelectorAll('button').forEach(b => b.disabled = true);
+        choicesWrap.appendChild(explainDiv);
+
+        // Store answered questions so they don't appear again
+        answeredQuestions.push(it.id);
+        usedQuestions[lec] = answeredQuestions;
+        
+        // Play sound immediately when the correct answer is selected
+        if (correct) {
+          const correctSound = document.getElementById('correct-sound');
+          correctSound.currentTime = 0;  // Reset to the start
+          correctSound.play();  // Play the sound immediately
+        }
+      });
+
+      choicesWrap.appendChild(btn);
+    });
+
+    el.appendChild(choicesWrap);
+    quizArea.appendChild(el);
+  });
+}
+
+startBtn.addEventListener('click', () => {
+  renderLecture(lectureSelect.value);
+});
+</script>
+</body>
+</html>
